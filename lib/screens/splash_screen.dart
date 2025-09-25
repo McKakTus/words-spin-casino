@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/storage_providers.dart';
 import 'create_account_screen.dart';
-import 'spin_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -31,15 +31,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (storedName == null || storedName.isEmpty) {
       Navigator.of(context).pushReplacementNamed(CreateAccountScreen.routeName);
     } else {
-      Navigator.of(context).pushReplacementNamed(SpinScreen.routeName);
+      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color neonYellow = Color(0xFFF6D736);
-    const Color darkSurface = Color(0xFF111111);
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/storage_providers.dart';
-import 'spin_screen.dart';
+import 'home_screen.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
@@ -48,7 +48,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     setState(() {
       _isSaving = false;
     });
-    Navigator.of(context).pushReplacementNamed(SpinScreen.routeName);
+    Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
   }
 
   @override

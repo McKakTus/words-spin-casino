@@ -7,10 +7,10 @@ import '../providers/storage_providers.dart';
 import 'stats_screen.dart';
 import 'word_screen.dart';
 
-class SpinScreen extends ConsumerWidget {
-  const SpinScreen({super.key});
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
 
-  static const routeName = '/spin';
+  static const routeName = '/home';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,7 +30,7 @@ class SpinScreen extends ConsumerWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body :Column(
+        body: Column(
           children: [
             Container(
               height: 76 + MediaQuery.paddingOf(context).top + 10,
@@ -86,7 +86,19 @@ class SpinScreen extends ConsumerWidget {
                           userName,
                           style: const TextStyle(
                             color: Color(0xFF000000),
-                            fontSize: 22,
+                            fontSize: 24,
+                            height: 1,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        Text(
+                          'Words learned 10',
+                          style: const TextStyle(
+                            color: Color(0xFF232522),
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -114,7 +126,7 @@ class SpinScreen extends ConsumerWidget {
                           style: const TextStyle(
                             color: Colors.white,
                             fontFamily: 'n',
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
                           ),
                         ),
