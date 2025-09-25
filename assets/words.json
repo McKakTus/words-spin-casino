@@ -1,0 +1,50 @@
+[
+  {
+    "word": "Book",
+    "translation": "Livre",
+    "example": "I read a book every night before going to sleep.",
+    "example_translation": "Je lis un livre chaque soir avant de me coucher."
+  },
+  {
+    "word": "Sun",
+    "translation": "Soleil",
+    "example": "The sun rises in the east and sets in the west.",
+    "example_translation": "Le soleil se lève à l'est et se couche à l'ouest."
+  },
+  {
+    "word": "Bicycle",
+    "translation": "Vélo",
+    "example": "She rides her bicycle to work every morning.",
+    "example_translation": "Elle va au travail à vélo chaque matin."
+  },
+  {
+    "word": "Forest",
+    "translation": "Forêt",
+    "example": "We walked through the forest listening to the birds.",
+    "example_translation": "Nous avons traversé la forêt en écoutant les oiseaux."
+  },
+  {
+    "word": "Ocean",
+    "translation": "Océan",
+    "example": "The ocean waves crashed against the rocks.",
+    "example_translation": "Les vagues de l'océan se brisaient contre les rochers."
+  },
+  {
+    "word": "Music",
+    "translation": "Musique",
+    "example": "Listening to music helps me relax.",
+    "example_translation": "Écouter de la musique m'aide à me détendre."
+  },
+  {
+    "word": "Journey",
+    "translation": "Voyage",
+    "example": "Their journey across the country took two weeks.",
+    "example_translation": "Leur voyage à travers le pays a duré deux semaines."
+  },
+  {
+    "word": "Garden",
+    "translation": "Jardin",
+    "example": "He planted flowers in the garden for spring.",
+    "example_translation": "Il a planté des fleurs dans le jardin pour le printemps."
+  }
+]
