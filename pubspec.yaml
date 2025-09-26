@@ -62,8 +62,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/words.json
+    - assets/quiz.json
     - assets/images/coin.png
+    - assets/images/background.jpg
+    - assets/images/background_a.jpg
     - assets/images/avatar.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see

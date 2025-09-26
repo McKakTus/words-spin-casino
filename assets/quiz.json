@@ -1,0 +1,130 @@
+[
+  {
+    "id": "q1",
+    "question": "Which ocean is the largest on Earth?",
+    "options": ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"],
+    "answer": "Pacific Ocean",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q2",
+    "question": "What is the capital city of Japan?",
+    "options": ["Kyoto", "Osaka", "Tokyo", "Nagoya"],
+    "answer": "Tokyo",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q3",
+    "question": "Which planet is known as the Red Planet?",
+    "options": ["Venus", "Mars", "Jupiter", "Saturn"],
+    "answer": "Mars",
+    "category": "Space",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q4",
+    "question": "Who wrote the play 'Romeo and Juliet'?",
+    "options": ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"],
+    "answer": "William Shakespeare",
+    "category": "Literature",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q5",
+    "question": "What gas do plants absorb from the atmosphere?",
+    "options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+    "answer": "Carbon Dioxide",
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q6",
+    "question": "Which continent is the Sahara Desert located on?",
+    "options": ["Asia", "Africa", "Australia", "North America"],
+    "answer": "Africa",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q7",
+    "question": "What is the largest mammal in the world?",
+    "options": ["African Elephant", "Blue Whale", "Giraffe", "Hippopotamus"],
+    "answer": "Blue Whale",
+    "category": "Biology",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q8",
+    "question": "Which element has the chemical symbol 'O'?",
+    "options": ["Osmium", "Oxygen", "Gold", "Iron"],
+    "answer": "Oxygen",
+    "category": "Chemistry",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q9",
+    "question": "In which year did the first man land on the Moon?",
+    "options": ["1965", "1969", "1971", "1975"],
+    "answer": "1969",
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q10",
+    "question": "What is the smallest prime number?",
+    "options": ["0", "1", "2", "3"],
+    "answer": "2",
+    "category": "Mathematics",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q11",
+    "question": "Which instrument has keys, pedals, and strings?",
+    "options": ["Piano", "Guitar", "Violin", "Flute"],
+    "answer": "Piano",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q12",
+    "question": "What is the tallest mountain in the world?",
+    "options": ["K2", "Mount Everest", "Kangchenjunga", "Lhotse"],
+    "answer": "Mount Everest",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q13",
+    "question": "Which language has the most native speakers worldwide?",
+    "options": ["English", "Mandarin Chinese", "Spanish", "Hindi"],
+    "answer": "Mandarin Chinese",
+    "category": "Culture",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q14",
+    "question": "What part of the cell contains genetic material?",
+    "options": ["Nucleus", "Cytoplasm", "Cell membrane", "Ribosome"],
+    "answer": "Nucleus",
+    "category": "Biology",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q15",
+    "question": "Which famous scientist developed the theory of relativity?",
+    "options": ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Marie Curie"],
+    "answer": "Albert Einstein",
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q16",
+    "question": "Which is the longest river in the world?",
+    "options": ["Nile", "Amazon", "Yangtze", "Mississippi"],
+    "answer": "Nile",
+    "category": "Geography",
+    "difficulty": "medium"
+  }
+]

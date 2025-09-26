@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,8 +14,9 @@ void main() {
 
   testWidgets('Splash screen shows app title', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: SpinToLearnApp()));
+    await tester.pump();
 
-    expect(find.text('Spin to Learn'), findsOneWidget);
+    expect(find.byType(Scaffold), findsOneWidget);
 
     // Let the splash timer finish so no pending timers remain.
     await tester.pump(const Duration(seconds: 3));

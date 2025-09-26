@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/create_account_screen.dart';
 import 'screens/practice_screen.dart';
-import 'screens/spin_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/stats_screen.dart';
-import 'screens/word_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,8 +53,6 @@ class SpinToLearnApp extends StatelessWidget {
         SplashScreen.routeName: (_) => const SplashScreen(),
         CreateAccountScreen.routeName: (_) => const CreateAccountScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),
-        SpinScreen.routeName: (_) => const SpinScreen(),
-        WordScreen.routeName: (_) => const WordScreen(),
         PracticeScreen.routeName: (_) => const PracticeScreen(),
         StatsScreen.routeName: (_) => const StatsScreen(),
       },

@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word.dart';
 
 final wordListProvider = FutureProvider<List<Word>>((ref) async {
-  final jsonString = await rootBundle.loadString('assets/words.json');
+  final jsonString = await rootBundle.loadString('assets/quiz.json');
   final dynamic decoded = jsonDecode(jsonString);
   if (decoded is! List) {
     throw FormatException('Expected a list of words in the JSON asset');
