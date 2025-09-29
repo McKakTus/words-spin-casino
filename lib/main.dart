@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'screens/create_account_screen.dart';
-import 'screens/practice_screen.dart';
-import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/create_account_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/stats_screen.dart';
 
 void main() {
@@ -23,7 +22,7 @@ class SpinToLearnApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'Spin to Learn',
+      title: 'Quiz Spin Casino',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'MightySouly',
@@ -53,7 +52,6 @@ class SpinToLearnApp extends StatelessWidget {
         SplashScreen.routeName: (_) => const SplashScreen(),
         CreateAccountScreen.routeName: (_) => const CreateAccountScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),
-        PracticeScreen.routeName: (_) => const PracticeScreen(),
         StatsScreen.routeName: (_) => const StatsScreen(),
       },
     );

@@ -1,4 +1,4 @@
-# spin_to_learn
+# quizspincasino
 
 A new Flutter project.
 
