@@ -64,6 +64,7 @@ flutter:
   assets:
     - assets/quiz.json
     - assets/images/avatars/
+    - assets/images/sectors/
     - assets/images/coin.png
     - assets/images/arrow.png
     - assets/images/background.jpg

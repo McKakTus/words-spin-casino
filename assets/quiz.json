@@ -126,5 +126,277 @@
     "answer": "Nile",
     "category": "Geography",
     "difficulty": "medium"
+  },
+  {
+    "id": "q17",
+    "question": "Who painted the Mona Lisa?",
+    "options": ["Leonardo da Vinci", "Michelangelo", "Vincent van Gogh", "Pablo Picasso"],
+    "answer": "Leonardo da Vinci",
+    "category": "Art",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q18",
+    "question": "What is the capital of Australia?",
+    "options": ["Sydney", "Melbourne", "Canberra", "Brisbane"],
+    "answer": "Canberra",
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q19",
+    "question": "What is the boiling point of water at sea level?",
+    "options": ["50°C", "75°C", "100°C", "150°C"],
+    "answer": "100°C",
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q20",
+    "question": "Which organ pumps blood throughout the body?",
+    "options": ["Liver", "Heart", "Lungs", "Kidneys"],
+    "answer": "Heart",
+    "category": "Biology",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q21",
+    "question": "Who discovered penicillin?",
+    "options": ["Alexander Fleming", "Louis Pasteur", "Marie Curie", "Gregor Mendel"],
+    "answer": "Alexander Fleming",
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q22",
+    "question": "Which gas do humans exhale?",
+    "options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+    "answer": "Carbon Dioxide",
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q23",
+    "question": "What is the capital of France?",
+    "options": ["Berlin", "Paris", "Rome", "Madrid"],
+    "answer": "Paris",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q24",
+    "question": "Which animal is known as the King of the Jungle?",
+    "options": ["Tiger", "Lion", "Elephant", "Leopard"],
+    "answer": "Lion",
+    "category": "Biology",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q25",
+    "question": "What is the square root of 64?",
+    "options": ["6", "7", "8", "9"],
+    "answer": "8",
+    "category": "Mathematics",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q26",
+    "question": "What is the capital of Canada?",
+    "options": ["Toronto", "Ottawa", "Vancouver", "Montreal"],
+    "answer": "Ottawa",
+    "category": "Geography",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q27",
+    "question": "In which year did World War II end?",
+    "options": ["1943", "1944", "1945", "1946"],
+    "answer": "1945",
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q28",
+    "question": "Which blood type is known as the universal donor?",
+    "options": ["A", "B", "O", "AB"],
+    "answer": "O",
+    "category": "Biology",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q29",
+    "question": "Which is the largest planet in our solar system?",
+    "options": ["Earth", "Mars", "Jupiter", "Saturn"],
+    "answer": "Jupiter",
+    "category": "Space",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q30",
+    "question": "What is the freezing point of water?",
+    "options": ["0°C", "32°C", "Both 0°C and 32°C", "100°C"],
+    "answer": "Both 0°C and 32°C",
+    "category": "Science",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q31",
+    "question": "What is the chemical symbol for gold?",
+    "options": ["Ag", "Au", "Gd", "Go"],
+    "answer": "Au",
+    "category": "Chemistry",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q32",
+    "question": "Who was the first President of the United States?",
+    "options": ["George Washington", "Thomas Jefferson", "Abraham Lincoln", "John Adams"],
+    "answer": "George Washington",
+    "category": "History",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q33",
+    "question": "Which instrument is also called a 'violin'?",
+    "options": ["Cello", "Fiddle", "Flute", "Drum"],
+    "answer": "Fiddle",
+    "category": "Music",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q34",
+    "question": "Which sport is known as 'the king of sports'?",
+    "options": ["Basketball", "Cricket", "Soccer", "Tennis"],
+    "answer": "Soccer",
+    "category": "Sports",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q35",
+    "question": "Who was the first man to step on the Moon?",
+    "options": ["Buzz Aldrin", "Neil Armstrong", "Michael Collins", "Yuri Gagarin"],
+    "answer": "Neil Armstrong",
+    "category": "Space",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q36",
+    "question": "What is the capital of Italy?",
+    "options": ["Milan", "Rome", "Naples", "Florence"],
+    "answer": "Rome",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q37",
+    "question": "Which famous scientist discovered gravity?",
+    "options": ["Galileo Galilei", "Albert Einstein", "Isaac Newton", "Nikola Tesla"],
+    "answer": "Isaac Newton",
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q38",
+    "question": "What is the national sport of Japan?",
+    "options": ["Karate", "Sumo Wrestling", "Baseball", "Judo"],
+    "answer": "Sumo Wrestling",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q39",
+    "question": "Which planet is closest to the Sun?",
+    "options": ["Mercury", "Venus", "Earth", "Mars"],
+    "answer": "Mercury",
+    "category": "Space",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q40",
+    "question": "Which war was fought between the North and South in the United States?",
+    "options": ["World War I", "World War II", "Civil War", "Revolutionary War"],
+    "answer": "Civil War",
+    "category": "History",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q41",
+    "question": "Which is the longest bone in the human body?",
+    "options": ["Skull", "Femur", "Spine", "Tibia"],
+    "answer": "Femur",
+    "category": "Biology",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q42",
+    "question": "Which desert is the largest in the world?",
+    "options": ["Sahara", "Gobi", "Antarctic", "Kalahari"],
+    "answer": "Antarctic",
+    "category": "Geography",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q43",
+    "question": "Which band released the song 'Hey Jude'?",
+    "options": ["The Beatles", "The Rolling Stones", "Pink Floyd", "Led Zeppelin"],
+    "answer": "The Beatles",
+    "category": "Music",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q44",
+    "question": "Which country is home to the Great Wall?",
+    "options": ["India", "Japan", "China", "Mongolia"],
+    "answer": "China",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q45",
+    "question": "Which organ in the human body is responsible for detoxification?",
+    "options": ["Liver", "Kidney", "Lungs", "Heart"],
+    "answer": "Liver",
+    "category": "Biology",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q46",
+    "question": "Which famous scientist is known as the 'Father of Modern Physics'?",
+    "options": ["Galileo Galilei", "Albert Einstein", "Isaac Newton", "Stephen Hawking"],
+    "answer": "Galileo Galilei",
+    "category": "Science",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q47",
+    "question": "Which country hosted the 2016 Summer Olympics?",
+    "options": ["China", "Brazil", "UK", "USA"],
+    "answer": "Brazil",
+    "category": "Sports",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q48",
+    "question": "What is the fastest land animal?",
+    "options": ["Lion", "Cheetah", "Horse", "Leopard"],
+    "answer": "Cheetah",
+    "category": "Biology",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q49",
+    "question": "What is the capital city of Egypt?",
+    "options": ["Cairo", "Alexandria", "Luxor", "Giza"],
+    "answer": "Cairo",
+    "category": "Geography",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q50",
+    "question": "Which gas makes up most of the Earth's atmosphere?",
+    "options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Helium"],
+    "answer": "Nitrogen",
+    "category": "Science",
+    "difficulty": "easy"
   }
 ]

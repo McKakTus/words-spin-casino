@@ -55,7 +55,9 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           centerTitle: true,
           title: const Text(
             'Quiz Challenge',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 28,
+            ),
           ),
         ),
         body: Stack(
@@ -82,7 +84,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                       child: Text(
                         widget.question.category?.toUpperCase() ?? 'QUIZ',
                         style: const TextStyle(
-                          color: Color(0xFFF6D736),
+                          color: Color(0xFFE2B400),
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8,
                         ),
@@ -131,10 +133,10 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                               : 'Correct answer: ${widget.question.answer}',
                           style: TextStyle(
                             color: _isCorrect
-                                ? const Color(0xFFF6D736)
+                                ? const Color(0xFFE2B400)
                                 : const Color(0xFFFF8FAB),
                             fontWeight: FontWeight.w700,
-                            fontSize: 16,
+                            fontSize: 18,
                           ),
                         ),
                       ),
@@ -144,7 +146,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                       width: double.infinity,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFF6D736),
+                          backgroundColor: const Color(0xFFE2B400),
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           textStyle: const TextStyle(

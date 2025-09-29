@@ -28,8 +28,8 @@ class WheelDisplay extends StatelessWidget {
     }
     
     return Container(
-      width: 320,
-      height: 320,
+      width: 330,
+      height: 330,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
@@ -63,7 +63,7 @@ class WheelDisplay extends StatelessWidget {
                   return _formatLabel(label);
                 }),
               ),
-              child: const SizedBox(width: 320, height: 320),
+              child: const SizedBox(width: 330, height: 330),
             ),
           ),
           
@@ -71,11 +71,11 @@ class WheelDisplay extends StatelessWidget {
           Positioned(
             top: 0,
             child: SizedBox(
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               child: Image.asset(Images.arrow,
-                width: 60,
-                height: 60,
+                width: 50,
+                height: 50,
                 fit: BoxFit.contain,
               ),
             ),
@@ -83,8 +83,9 @@ class WheelDisplay extends StatelessWidget {
           
           // Center hub
           Container(
-            width: 70,
-            height: 70,
+            width: 80,
+            height: 80,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const RadialGradient(
@@ -95,7 +96,7 @@ class WheelDisplay extends StatelessWidget {
                 ],
               ),
               border: Border.all(
-                color: const Color(0xFFFFD700),
+                color: const Color(0xFFffaf28),
                 width: 3,
               ),
               boxShadow: const [
@@ -106,6 +107,13 @@ class WheelDisplay extends StatelessWidget {
                 ),
               ],
             ),
+            child: const Text(
+              'SPIN',
+              style: TextStyle(
+                color: Color(0xFFffaf28),
+                fontSize: 24,
+              ),
+            ),
           ),
         ],
       ),
@@ -113,7 +121,7 @@ class WheelDisplay extends StatelessWidget {
   }
 
   static String _formatLabel(String text) {
-    const int limit = 12;
+    const int limit = 14;
     final sanitized = text.replaceAll('\n', ' ').trim();
     if (sanitized.length <= limit) {
       return sanitized;

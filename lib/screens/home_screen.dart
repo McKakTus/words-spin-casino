@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 Stack(
                   children: [
                     Text(
-                      'Spin the Wheel'.toUpperCase(),
+                      'Spin the Wheel',
                       style: TextStyle(
                         fontSize: 44,
                         foreground: Paint()
@@ -195,7 +195,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ),
                     Text(
-                      'Spin the Wheel'.toUpperCase(),
+                      'Spin the Wheel',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,

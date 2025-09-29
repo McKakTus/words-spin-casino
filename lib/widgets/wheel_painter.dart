@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class WheelPainter extends CustomPainter {
-  WheelPainter({required this.labels});
+  WheelPainter({
+    required this.labels
+  });
 
   final List<String> labels;
 
@@ -13,22 +15,9 @@ class WheelPainter extends CustomPainter {
     final segmentAngle = (2 * math.pi) / labels.length;
     final baseStart = -math.pi / 2 - segmentAngle / 2;
 
-    // Цвета для сегментов как на скриншоте
-    final List<Color> segmentColors = [
-      const Color(0xFF4A90E2), // Синий
-      const Color(0xFFE74C3C), // Красный  
-      const Color(0xFF2ECC71), // Зеленый
-      const Color(0xFFF39C12), // Оранжевый
-      const Color(0xFF9B59B6), // Фиолетовый
-      const Color(0xFF1ABC9C), // Бирюзовый
-      const Color(0xFFE91E63), // Розовый
-      const Color(0xFF795548), // Коричневый
-    ];
-
     // Рисуем сегменты
     for (var i = 0; i < labels.length; i++) {
       final startAngle = baseStart + i * segmentAngle;
-      final segmentColor = segmentColors[i % segmentColors.length];
       
       // Создаем радиальный градиент от темного центра к цветному краю
       final gradient = RadialGradient(
@@ -37,9 +26,9 @@ class WheelPainter extends CustomPainter {
         colors: [
           const Color(0xFF2A2A2A), // Темный центр
           const Color(0xFF1A1A1A), // Средний
-          segmentColor.withOpacity(0.8), // Цветной край
+          const Color(0xFFe58923), // Крайний
         ],
-        stops: const [0.0, 0.6, 1.0],
+        stops: const [0.0, 0.4, 1],
       );
 
       final segmentRect = Rect.fromCircle(center: center, radius: radius);
@@ -75,21 +64,6 @@ class WheelPainter extends CustomPainter {
       ..strokeWidth = 8.0;
     
     canvas.drawCircle(center, radius - 4, outerBorderPaint);
-
-    // Рисуем белый центральный круг
-    final centerPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.white;
-    
-    canvas.drawCircle(center, radius * 0.25, centerPaint);
-
-    // Черная обводка центрального круга
-    final centerBorderPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..color = Colors.black;
-    
-    canvas.drawCircle(center, radius * 0.25, centerBorderPaint);
   }
 
   void _drawSegmentText(
@@ -103,15 +77,16 @@ class WheelPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
+          color: Color(0xFFfeb229),
+          fontSize: 16,
           fontFamily: 'MightySouly',
         ),
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
-      maxLines: 2,
-    )..layout(maxWidth: radius * 0.4);
+      maxLines: 1,
+      ellipsis: '...',  
+    )..layout(maxWidth: radius * 0.6);
 
     final textRadius = radius * 0.65;
     final textCenter = Offset(
