@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/image_paths.dart';
+import '../helpers/link.dart';
 
 import '../widgets/header.dart';
 
 import '../providers/player_progress_provider.dart';
 import '../providers/storage_providers.dart';
+
+import 'profile_screen.dart';
+import 'web_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -48,13 +52,40 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        'Настройки будут здесь',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 18,
-                        ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 56),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          MenuButton(
+                            text: 'Profile',
+                            onTap: () => Navigator.of(context).pushNamed(ProfileScreen.routeName),
+                          ),
+                          const SizedBox(height: 20),
+                          MenuButton(
+                            text: 'Privacy Policy',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => WebScreen(
+                                  title: 'Privacy Policy',
+                                  link: AppLinks.privacyPolicy,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          MenuButton(
+                            text: 'Terms & Conditions',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => WebScreen(
+                                  title: 'Terms & Conditions',
+                                  link: AppLinks.terms,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -67,6 +98,51 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class MenuButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const MenuButton({
+    super.key,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        decoration: BoxDecoration(
+          border: const Border(
+            bottom: BorderSide(
+              color: Color(0xFFe58923),
+              width: 3,
+            ),
+          ),
+          borderRadius: BorderRadius.circular(34),
+        ),
+        child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFffaf28),
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            textStyle: const TextStyle(
+              fontFamily: 'MightySouly',
+              fontSize: 24,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
+          ),
+          onPressed: onTap,
+          child: Text(text),
+        ),
+      ),
     );
   }
 }

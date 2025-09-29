@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/spin_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,7 @@ class QuizSpinCasinoApp extends StatelessWidget {
         SpinScreen.routeName: (_) => const SpinScreen(),
         StatsScreen.routeName: (_) => const StatsScreen(),
         SettingsScreen.routeName: (_) => const SettingsScreen(),
+        ProfileScreen.routeName: (context) => const ProfileScreen(),
       },
     );
   }
