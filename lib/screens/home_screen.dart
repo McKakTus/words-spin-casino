@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../helpers/image_paths.dart';
+
 import '../models/player_progress.dart';
 import '../models/quiz_question.dart';
+
 import '../providers/player_progress_provider.dart';
 import '../providers/quiz_providers.dart';
 import '../providers/storage_providers.dart';
+
 import 'quiz_screen.dart';
 import 'stats_screen.dart';
 
@@ -59,12 +63,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final userName = ref
-        .watch(sharedPreferencesProvider)
-        .maybeWhen(
-          data: (prefs) => prefs.getString('userName') ?? 'Explorer',
-          orElse: () => 'Explorer',
-        );
+    final prefsAsync = ref.watch(sharedPreferencesProvider);
+
+    final userName = prefsAsync.maybeWhen(
+      data: (prefs) => prefs.getString('userName') ?? 'Explorer',
+      orElse: () => 'Explorer',
+    );
+
+    final avatarIndex = prefsAsync.maybeWhen(
+      data: (prefs) => prefs.getInt('profileAvatar') ?? 0,
+      orElse: () => 0,
+    );
 
     final questionsAsync = ref.watch(quizQuestionsProvider);
     final progressAsync = ref.watch(playerProgressProvider);
@@ -79,18 +88,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'assets/images/background.jpg',
-          fit: BoxFit.cover,
-        ),
+        Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
 
         BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 3,
-            sigmaY: 3, 
-          ),
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
           child: Container(
-            color: Colors.black.withOpacity(0), 
+            color: Colors.black.withOpacity(0.1),
           ),
         ),
 
@@ -99,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           body: questionsAsync.when(
             data: (questions) => progressAsync.when(
               data: (progress) =>
-                  _buildContent(context, userName, questions, progress),
+                  _buildContent(context, userName, avatarIndex, questions, progress),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => _ErrorState(message: error.toString()),
             ),
@@ -141,10 +144,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildContent(
     BuildContext context,
     String userName,
+    int avatarIndex,  
     List<QuizQuestion> questions,
     PlayerProgress progress,
   ) {
-    const Color neonYellow = Color(0xFFF6D736);
+    const Color neonYellow = Color(0xFFffaf28);
 
     final remaining = questions
         .where((q) => !progress.usedQuestionIds.contains(q.id))
@@ -153,9 +157,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Column(
       children: [
-
         _ProfileHeader(
           userName: userName,
+          avatarIndex: avatarIndex,
           progress: progress,
           onStatsTap: () =>
               Navigator.of(context).pushNamed(StatsScreen.routeName),
@@ -167,13 +171,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 32),
-              Text(
-                'Spin the Wheel'.toUpperCase(),
-                style: TextStyle(
-                  color: Color(0xFFFFFFFF),
-                  fontSize: 36,
-                  fontWeight: FontWeight.w700
-                ),
+              Stack(
+                children: [
+                  Text(
+                    'Spin the Wheel'.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 44,
+                      foreground:
+                        Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 4
+                          ..color = const Color(0xFFE2B400),
+                        ),
+                  ),
+                  Text(
+                    'Spin the Wheel'.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 44,
+                      color: Color(0xFF000000),
+                      shadows: [
+                        Shadow(
+                          color: const Color(0xFFF6D736),
+                          blurRadius: 2,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ]
               ),
               SizedBox(height: 8),
               Text(
@@ -216,17 +244,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: neonYellow,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        textStyle: const TextStyle(
-                          fontFamily: 'Rubik',
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18,
-                          letterSpacing: 0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      textStyle: const TextStyle(
+                        fontFamily: 'MightySouly',
+                        fontSize: 24,
+                        letterSpacing: 0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                     onPressed: _isSpinning || isEmpty
                         ? null
@@ -345,57 +372,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,              
+            crossAxisAlignment: CrossAxisAlignment.stretch, 
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF232323),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white12),
-                ),
-                child: Text(
-                  question.category?.toUpperCase() ?? 'QUIZ',
-                  style: const TextStyle(
-                    color: Color(0xFFF6D736),
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF232323),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Text(
+                    question.category ?? 'QUIZ',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFF6D736),
+                    ),
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
+
               Text(
                 question.question,
+                textAlign: TextAlign.center,   
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
                 ),
               ),
+
               const SizedBox(height: 24),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFF6D736),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+
+              SizedBox(
+                width: double.infinity, 
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFffaf28),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    textStyle: const TextStyle(
+                      fontFamily: 'MightySouly',
+                      fontSize: 22,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _openQuiz(question);
-                },
-                child: const Text(
-                  'Answer Now',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _openQuiz(question);
+                  },
+                  child: const Text('Answer Now'),
                 ),
               ),
             ],
@@ -460,11 +496,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.userName,
+    required this.avatarIndex,
     required this.progress,
     required this.onStatsTap,
   });
 
   final String userName;
+  final int avatarIndex;
   final PlayerProgress progress;
   final VoidCallback onStatsTap;
 
@@ -478,16 +516,14 @@ class _ProfileHeader extends StatelessWidget {
         right: 16,
       ),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(20),
-        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         border: const Border(
-          bottom: BorderSide(color: Color(0xFFF6D736), width: 3),
+          bottom: BorderSide(color: Color(0xFFe58923), width: 3),
         ),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6D736), Color(0xFFE2B400)],
+          colors: [Color(0xFFffbc2f), Color(0xFFfeb229)],
         ),
         boxShadow: const [
           BoxShadow(
@@ -509,27 +545,49 @@ class _ProfileHeader extends StatelessWidget {
               color: Colors.transparent,
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              'assets/images/avatar.jpg',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset(Images.avatars[avatarIndex % Images.avatars.length], fit: BoxFit.cover),
           ),
           const SizedBox(width: 10),
 
           // Username
           Expanded(
-            child: Column (
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    color: Color(0xFF000000),
-                    fontSize: 24,
-                    height: 1,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Stack(
+                children: [
+                  Text(
+                    userName.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 26,
+                        height: 1,
+                        foreground:
+                          Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 4
+                            ..color = const Color(0xFFE2B400),
+                          ),
+                    ),
+                    Text(
+                      userName.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        height: 1,
+                        color: Color(0xFF000000),
+                        shadows: [
+                          Shadow(
+                            color: const Color(0xFFF6D736),
+                            blurRadius: 2,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]
                 ),
 
                 const SizedBox(height: 2),
@@ -542,8 +600,8 @@ class _ProfileHeader extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ]
-            )
+              ],
+            ),
           ),
 
           // Coins pill
@@ -608,11 +666,11 @@ class _WheelDisplay extends StatelessWidget {
             },
             child: CustomPaint(
               painter: _WheelPainter(
-                labels: List<String>.generate(
-                  _segmentCount,
-                  (index) =>
-                      _formatLabel(segments[index % segments.length].question),
-                ),
+                labels: List<String>.generate(_segmentCount, (index) {
+                  final quiz = segments[index % segments.length];
+                  final label = quiz.category?.toUpperCase() ?? 'QUIZ';
+                  return _formatLabel(label);
+                }),
               ),
               child: const SizedBox.expand(),
             ),

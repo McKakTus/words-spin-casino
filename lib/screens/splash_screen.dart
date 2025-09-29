@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/storage_providers.dart';
@@ -37,23 +38,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050505), Color(0xFF1A1A1A)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
+
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+          child: Container(
+            color: Colors.black.withOpacity(0.1),
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: []
-          ),
+
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Container(),
         ),
-      ),
+      ],
     );
   }
 }

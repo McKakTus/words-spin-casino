@@ -26,13 +26,13 @@ class SpinToLearnApp extends StatelessWidget {
       title: 'Spin to Learn',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'Rubik',
+        fontFamily: 'MightySouly',
         useMaterial3: true,
         colorScheme: colorScheme,
         scaffoldBackgroundColor: const Color(0xFF111111),
         textTheme: const TextTheme(
-          displaySmall: TextStyle(fontFamily: 'Rubik', letterSpacing: 1.1),
-          headlineSmall: TextStyle(fontFamily: 'Rubik', letterSpacing: 1.05),
+          displaySmall: TextStyle(fontFamily: 'MightySouly', letterSpacing: 1.1),
+          headlineSmall: TextStyle(fontFamily: 'MightySouly', letterSpacing: 1.05),
         ),
         appBarTheme: AppBarTheme(
           backgroundColor: colorScheme.surface,

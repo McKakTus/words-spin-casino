@@ -139,20 +139,29 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                         ),
                       ),
                     const SizedBox(height: 20),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFF6D736),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFF6D736),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          textStyle: const TextStyle(
+                            fontFamily: 'MightySouly',
+                            fontSize: 24,
+                            letterSpacing: 0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                         ),
-                      ),
-                      onPressed: _answered
+                        onPressed: _answered
                           ? () => Navigator.of(context).pop(_isCorrect)
                           : null,
-                      child: Text(
-                        _answered ? 'Back to Wheel' : 'Select an answer',
+                        child: Text(
+                          _answered ? 'Back to Wheel' : 'Select an answer',
+                        ),
                       ),
                     ),
                   ],

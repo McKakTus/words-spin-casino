@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/storage_providers.dart';
+import '../helpers/image_paths.dart';
+
 import 'home_screen.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -17,6 +20,9 @@ class CreateAccountScreen extends ConsumerStatefulWidget {
 class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  final _page = PageController(viewportFraction: 0.65);
+
+  int _index = 0;
   bool _isSaving = false;
   bool _hasLoadedInitialName = false;
 
@@ -42,7 +48,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
     final prefs = await ref.read(sharedPreferencesProvider.future);
     final trimmedName = _nameController.text.trim();
+
     await prefs.setString('userName', trimmedName);
+    await prefs.setInt('profileAvatar', _index);
 
     if (!mounted) return;
     setState(() {
@@ -54,10 +62,10 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final prefsAsync = ref.watch(sharedPreferencesProvider);
-    const Color neonYellow = Color(0xFFF6D736);
-    const Color darkBackgroundTop = Color(0xFF080808);
-    const Color darkBackgroundBottom = Color(0xFF1A1A1A);
-    const Color cardColor = Color(0xFF111111);
+
+    const Color neonYellow = Color(0xFFffaf28);
+
+    final paddingTop = MediaQuery.paddingOf(context).top + 44;
 
     return prefsAsync.when(
       data: (prefs) {
@@ -68,138 +76,195 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           }
           _hasLoadedInitialName = true;
         }
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [darkBackgroundTop, darkBackgroundBottom],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
+
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+              child: Container(
+                color: Colors.black.withOpacity(0.1),
+              ),
             ),
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            extendBodyBehindAppBar: true,
-            body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white12),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x33000000),
-                              blurRadius: 24,
-                              offset: Offset(0, 18),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Pick your name',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'We\'ll use it for leaderboards and daily streaks.',
-                              style: TextStyle(
-                                color: Color(0xFF8E8E8E),
-                                fontSize: 12,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            TextFormField(
-                              controller: _nameController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                labelText: 'Display name',
-                                labelStyle: const TextStyle(
-                                  color: Color(0xFFB8B8B8),
-                                ),
-                                hintText: 'e.g. Word Wizard',
-                                hintStyle: const TextStyle(
-                                  color: Color(0xFF6F6F6F),
-                                ),
-                                filled: true,
-                                fillColor: const Color(0xFF1C1C1C),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF2E2E2E),
+
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(0, paddingTop, 0, 24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              Stack(
+                                children: [
+                                  Text(
+                                    'Welcome'.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 44,
+                                      foreground:
+                                        Paint()
+                                          ..style = PaintingStyle.stroke
+                                          ..strokeWidth = 4
+                                          ..color = const Color(0xFFE2B400),
+                                        ),
                                   ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF2E2E2E),
+                                  Text(
+                                    'Welcome'.toUpperCase(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 44,
+                                      color: Color(0xFF000000),
+                                      shadows: [
+                                        Shadow(
+                                          color: const Color(0xFFF6D736),
+                                          blurRadius: 2,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: neonYellow),
+                                ]
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              const Text(
+                                'Pick an avatar to represent you.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter your name to continue';
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: neonYellow,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Rubik',
-                              fontWeight: FontWeight.w500,
-                              fontSize: 18,
-                              letterSpacing: 0,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
+
+                              const SizedBox(height: 36),
+
+                              SizedBox(
+                                height: 270,
+                                child: PageView.builder(
+                                  controller: _page,
+                                  onPageChanged: (i) => setState(() => _index = i),
+                                  itemCount: Images.avatars.length,
+                                  itemBuilder:
+                                      (_, i) => _AvatarCard(
+                                        asset: Images.avatars[i],
+                                        selected: _index == i,
+                                      ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                              
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 40),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    TextFormField(
+                                      controller: _nameController,
+                                      style: const TextStyle(color: Colors.white),
+                                      decoration: InputDecoration(
+                                        labelText: 'Display name',
+                                        labelStyle: const TextStyle(
+                                          color: Color(0xFFB8B8B8),
+                                        ),
+                                        floatingLabelStyle: TextStyle(
+                                          color: Colors.white,       
+                                        ),
+                                        hintText: 'e.g. Word Wizard',
+                                        hintStyle: const TextStyle(
+                                          color: Color(0xFF6F6F6F),
+                                        ),
+                                        filled: true,
+                                        fillColor: const Color(0xFF1C1C1C),
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 20, 
+                                          vertical: 18,   
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF2E2E2E),
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF2E2E2E),
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                          borderSide: BorderSide(color: Color(0xFFF6D736)),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.trim().isEmpty) {
+                                          return 'Please enter your name to continue';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: neonYellow,
+                                          foregroundColor: Colors.black,
+                                          padding: const EdgeInsets.symmetric(vertical: 20),
+                                          textStyle: const TextStyle(
+                                            fontFamily: 'MightySouly',
+                                            fontSize: 24,
+                                            letterSpacing: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                        ),
+                                        onPressed: _isSaving ? null : _saveAndContinue,
+                                        child: _isSaving
+                                            ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 3,
+                                                ),
+                                              )
+                                            : const Text('Start Learning'),
+                                      ),
+                                    ),
+                                  ]
+                                ),
+                              ),
+                            ],
                           ),
-                          onPressed: _isSaving ? null : _saveAndContinue,
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : const Text('Start Learning'),
                         ),
                       ),
-                      const SizedBox(height: 44),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         );
       },
       loading: () =>
@@ -213,6 +278,30 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               textAlign: TextAlign.center,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AvatarCard extends StatelessWidget {
+  const _AvatarCard({required this.asset, required this.selected});
+  final String asset;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: selected ? 1.0 : 0.9,
+      duration: const Duration(milliseconds: 200),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(36),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Image.asset(asset, fit: BoxFit.cover)
         ),
       ),
     );
