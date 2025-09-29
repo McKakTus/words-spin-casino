@@ -20,11 +20,11 @@ class StatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(sharedPreferencesProvider);
     final questionsAsync = ref.watch(quizQuestionsProvider);
-    final progressAsync  = ref.watch(playerProgressProvider);
+    final progressAsync = ref.watch(playerProgressProvider);
 
-    final prefs        = prefsAsync.valueOrNull;
-    final userName     = prefs?.getString('userName') ?? 'Explorer';
-    final avatarIndex  = prefs?.getInt('profileAvatar') ?? 0;
+    final prefs = prefsAsync.valueOrNull;
+    final userName = prefs?.getString('userName') ?? 'Explorer';
+    final avatarIndex = prefs?.getInt('profileAvatar') ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -32,7 +32,7 @@ class StatsScreen extends ConsumerWidget {
         Image.asset(Images.background, fit: BoxFit.cover),
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withOpacity(0.26)),
+          child: Container(color: Colors.black.withAlpha(66)),
         ),
         Scaffold(
           backgroundColor: Colors.transparent,
@@ -42,11 +42,13 @@ class StatsScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: progressAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => _ErrorState(message: e.toString()),
                   data: (PlayerProgress progress) {
                     return questionsAsync.when(
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (e, _) => _ErrorState(message: e.toString()),
                       data: (List<QuizQuestion> questions) {
                         return Column(
@@ -63,6 +65,8 @@ class StatsScreen extends ConsumerWidget {
                                 avatarIndex: avatarIndex,
                                 progress: progress,
                                 questions: questions,
+                                onResetPressed: () =>
+                                    _handleReset(context, ref),
                               ),
                             ),
                           ],
@@ -86,12 +90,14 @@ class _StatsContent extends StatelessWidget {
     required this.avatarIndex,
     required this.progress,
     required this.questions,
+    required this.onResetPressed,
   });
 
   final String userName;
   final int avatarIndex;
   final PlayerProgress progress;
   final List<QuizQuestion> questions;
+  final Future<void> Function() onResetPressed;
 
   static const Color _accent = Color(0xFFFFAF28);
   static const Color _cardColor = Color(0xFF141414);
@@ -279,6 +285,44 @@ class _StatsContent extends StatelessWidget {
           const SizedBox(height: 12),
           _AchievementsList(achievements: achievements),
 
+          const SizedBox(height: 28),
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Color(0xFFe58923),
+                    width: 1,
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed: onResetPressed,
+                icon: const Icon(Icons.refresh_rounded, color: Color(0xFFFFAF28), size: 20),
+                label: const Text(
+                  'Reset Progress',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           const SizedBox(height: 44),
         ],
       ),
@@ -329,6 +373,53 @@ class _StatsContent extends StatelessWidget {
       ),
     ];
   }
+}
+
+Future<void> _handleReset(BuildContext context, WidgetRef ref) async {
+  final shouldReset =
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF141414),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Reset progress?',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+          content: const Text(
+            'This clears learned quizzes, XP, and coins. Ready to start fresh?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFFFAF28),
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  if (!shouldReset) return;
+
+  await ref.read(playerProgressProvider.notifier).resetProgress();
+  if (!context.mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Progress reset. Spin the wheel for a fresh start!'),
+    ),
+  );
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -811,18 +902,18 @@ class _ProfileHeader extends StatelessWidget {
               color: Colors.white,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: Color(0xFF232522), 
-              foregroundColor: Colors.white,                    
+              backgroundColor: Color(0xFF232522),
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-              ),                      
+              ),
               padding: const EdgeInsets.all(8),
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
 
           const SizedBox(width: 6),
-          
+
           // Avatar
           Container(
             width: 54,

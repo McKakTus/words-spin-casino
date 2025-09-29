@@ -235,9 +235,20 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         return null;
                                       },
                                     ),
+
                                     const SizedBox(height: 24),
-                                    SizedBox(
+
+                                    Container(
                                       width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: _isSaving ? const Color(0x669E9E9E) : const Color(0xFFe58923),
+                                            width: 3,
+                                          ),
+                                        ),
+                                        borderRadius: BorderRadius.circular(34),
+                                      ),
                                       child: FilledButton(
                                         style: FilledButton.styleFrom(
                                           backgroundColor: neonYellow,
@@ -252,7 +263,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                           ),
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
-                                              30,
+                                              32,
                                             ),
                                           ),
                                         ),

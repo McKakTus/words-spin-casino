@@ -123,7 +123,9 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                         },
                       ),
                     ),
+
                     const SizedBox(height: 12),
+
                     if (_answered)
                       Align(
                         alignment: Alignment.center,
@@ -142,27 +144,39 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                       ),
                     const SizedBox(height: 20),
 
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFE2B400),
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          textStyle: const TextStyle(
-                            fontFamily: 'MightySouly',
-                            fontSize: 24,
-                            letterSpacing: 0,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: _answered ? const Color(0xFFe58923) : const Color(0x669E9E9E),
+                              width: 3,
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
+                          borderRadius: BorderRadius.circular(34),
                         ),
-                        onPressed: _answered
-                          ? () => Navigator.of(context).pop(_isCorrect)
-                          : null,
-                        child: Text(
-                          _answered ? 'Back to Wheel' : 'Select an answer',
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFffaf28),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            textStyle: const TextStyle(
+                              fontFamily: 'MightySouly',
+                              fontSize: 24,
+                              letterSpacing: 0,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          onPressed: _answered
+                            ? () => Navigator.of(context).pop(_isCorrect)
+                            : null,
+                          child: Text(
+                            _answered ? 'Back to Wheel' : 'Select an answer',
+                          ),
                         ),
                       ),
                     ),
@@ -277,8 +291,8 @@ class _AnswerOption extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: const Color(0xFF121212),
                   borderRadius: BorderRadius.circular(12),
@@ -289,6 +303,7 @@ class _AnswerOption extends StatelessWidget {
                     String.fromCharCode(65 + index),
                     style: const TextStyle(
                       color: Color(0xFFF6D736),
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -300,7 +315,7 @@ class _AnswerOption extends StatelessWidget {
                   optionText,
                   style: TextStyle(
                     color: textColor,
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

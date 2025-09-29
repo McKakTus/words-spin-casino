@@ -216,9 +216,19 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Answer quizzes to boost your XP and climb the ranks.',
+                  'Answer quizzes to boost your XP and \n climb the ranks.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontSize: 16,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -246,35 +256,47 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: neonYellow,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        textStyle: const TextStyle(
-                          fontFamily: 'MightySouly',
-                          fontSize: 24,
-                          letterSpacing: 0,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _isSpinning ? const Color(0x669E9E9E) : const Color(0xFFe58923),
+                            width: 3,
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                        borderRadius: BorderRadius.circular(34),
                       ),
-                      onPressed: _isSpinning
-                          ? null
-                          : () => _handleSpinPressed(),
-                      child: _isSpinning
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.black,
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : const Text('Spin Now'),
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: neonYellow,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          textStyle: const TextStyle(
+                            fontFamily: 'MightySouly',
+                            fontSize: 24,
+                            letterSpacing: 0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(32),
+                          ),
+                        ),
+                        onPressed: _isSpinning
+                            ? null
+                            : () => _handleSpinPressed(),
+                        child: _isSpinning
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.black,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : const Text('Spin Now'),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 44),
@@ -380,7 +402,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
       ),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+          padding: const EdgeInsets.fromLTRB(32, 24, 32, 44),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -410,31 +432,42 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
               Text(
                 question.question,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 20),
+                style: const TextStyle(color: Colors.white, fontSize: 24),
               ),
 
               const SizedBox(height: 24),
 
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFffaf28),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    textStyle: const TextStyle(
-                      fontFamily: 'MightySouly',
-                      fontSize: 22,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: const Border(
+                      bottom: BorderSide(
+                        color: Color(0xFFe58923),
+                        width: 3,
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                    borderRadius: BorderRadius.circular(34),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _openQuiz(question);
-                  },
-                  child: const Text('Answer Now'),
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFffaf28),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      textStyle: const TextStyle(
+                        fontFamily: 'MightySouly',
+                        fontSize: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _openQuiz(question);
+                    },
+                    child: const Text('Answer Now'),
+                  ),
                 ),
               ),
             ],
@@ -673,17 +706,31 @@ class _EmptyState extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFF6D736),
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
+        Center(
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Color(0xFFe58923),
+                  width: 2,
+                ),
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              onPressed: onResetTap,
+              icon: const Icon(Icons.refresh_rounded, color: Color(0xFFFFAF28), size: 20),
+              label: const Text('Reset Progress', style: TextStyle(fontSize: 18)),
             ),
           ),
-          onPressed: onResetTap,
-          child: const Text('Reset Progress', style: TextStyle(fontSize: 18)),
         ),
       ],
     );
