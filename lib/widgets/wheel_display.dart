@@ -26,19 +26,15 @@ class WheelDisplay extends StatelessWidget {
     if (segments.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return Container(
       width: 330,
       height: 330,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        boxShadow: [
+        boxShadow: const [
+          BoxShadow(color: Color(0x4DFFD700), blurRadius: 30, spreadRadius: 10),
           BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.3),
-            blurRadius: 30,
-            spreadRadius: 10,
-          ),
-          const BoxShadow(
             color: Colors.black26,
             blurRadius: 20,
             offset: Offset(0, 10),
@@ -66,21 +62,22 @@ class WheelDisplay extends StatelessWidget {
               child: const SizedBox(width: 330, height: 330),
             ),
           ),
-          
+
           // Pointer/Arrow at top
           Positioned(
             top: 0,
             child: SizedBox(
               width: 50,
               height: 50,
-              child: Image.asset(Images.arrow,
+              child: Image.asset(
+                Images.arrow,
                 width: 50,
                 height: 50,
                 fit: BoxFit.contain,
               ),
             ),
           ),
-          
+
           // Center hub
           Container(
             width: 80,
@@ -95,10 +92,7 @@ class WheelDisplay extends StatelessWidget {
                   Color(0xFF1A1A1A),
                 ],
               ),
-              border: Border.all(
-                color: const Color(0xFFffaf28),
-                width: 3,
-              ),
+              border: Border.all(color: const Color(0xFFffaf28), width: 3),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black54,
@@ -109,10 +103,7 @@ class WheelDisplay extends StatelessWidget {
             ),
             child: const Text(
               'SPIN',
-              style: TextStyle(
-                color: Color(0xFFffaf28),
-                fontSize: 24,
-              ),
+              style: TextStyle(color: Color(0xFFffaf28), fontSize: 24),
             ),
           ),
         ],

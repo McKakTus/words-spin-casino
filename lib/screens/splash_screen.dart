@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../helpers/image_paths.dart';
+
 import '../providers/storage_providers.dart';
+
 import 'create_account_screen.dart';
 import 'home_screen.dart';
 
@@ -41,19 +44,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
+        Image.asset(Images.background, fit: BoxFit.cover),
 
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(
-            color: Colors.black.withOpacity(0.1),
-          ),
+          child: Container(color: Colors.black.withAlpha(26)),
         ),
 
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Container(),
-        ),
+        Scaffold(backgroundColor: Colors.transparent, body: Container()),
       ],
     );
   }

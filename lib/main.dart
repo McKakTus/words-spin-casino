@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/splash_screen.dart';
 import 'screens/create_account_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/spin_screen.dart';
 import 'screens/stats_screen.dart';
 
 void main() {
@@ -52,6 +53,7 @@ class QuizSpinCasinoApp extends StatelessWidget {
         SplashScreen.routeName: (_) => const SplashScreen(),
         CreateAccountScreen.routeName: (_) => const CreateAccountScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),
+        SpinScreen.routeName: (_) => const SpinScreen(),
         StatsScreen.routeName: (_) => const StatsScreen(),
       },
     );

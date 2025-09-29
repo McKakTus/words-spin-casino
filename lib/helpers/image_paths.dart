@@ -1,6 +1,7 @@
 class Images {
   static const String _path = 'assets/images';
 
+  static const String background = '$_path/background_b.jpg';
   static const String arrow = '$_path/arrow.png';
 
   static const List<String> sectors = [

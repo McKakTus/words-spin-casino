@@ -79,13 +79,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
+            Image.asset(Images.background, fit: BoxFit.cover),
 
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: Container(
-                color: Colors.black.withOpacity(0.1),
-              ),
+              child: Container(color: Colors.black.withAlpha(26)),
             ),
 
             Scaffold(
@@ -110,12 +108,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                     'Welcome'.toUpperCase(),
                                     style: TextStyle(
                                       fontSize: 44,
-                                      foreground:
-                                        Paint()
-                                          ..style = PaintingStyle.stroke
-                                          ..strokeWidth = 4
-                                          ..color = const Color(0xFFE2B400),
-                                        ),
+                                      foreground: Paint()
+                                        ..style = PaintingStyle.stroke
+                                        ..strokeWidth = 4
+                                        ..color = const Color(0xFFE2B400),
+                                    ),
                                   ),
                                   Text(
                                     'Welcome'.toUpperCase(),
@@ -134,7 +131,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                       ],
                                     ),
                                   ),
-                                ]
+                                ],
                               ),
 
                               const SizedBox(height: 18),
@@ -161,33 +158,38 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                 height: 270,
                                 child: PageView.builder(
                                   controller: _page,
-                                  onPageChanged: (i) => setState(() => _index = i),
+                                  onPageChanged: (i) =>
+                                      setState(() => _index = i),
                                   itemCount: Images.avatars.length,
-                                  itemBuilder:
-                                      (_, i) => _AvatarCard(
-                                        asset: Images.avatars[i],
-                                        selected: _index == i,
-                                      ),
+                                  itemBuilder: (_, i) => _AvatarCard(
+                                    asset: Images.avatars[i],
+                                    selected: _index == i,
+                                  ),
                                 ),
                               ),
 
                               const SizedBox(height: 24),
-                              
+
                               Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 40),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     TextFormField(
                                       controller: _nameController,
-                                      style: const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                       decoration: InputDecoration(
                                         labelText: 'Display name',
                                         labelStyle: const TextStyle(
                                           color: Color(0xFFB8B8B8),
                                         ),
                                         floatingLabelStyle: TextStyle(
-                                          color: Colors.white,       
+                                          color: Colors.white,
                                         ),
                                         hintText: 'e.g. Word Wizard',
                                         hintStyle: const TextStyle(
@@ -195,29 +197,39 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         ),
                                         filled: true,
                                         fillColor: const Color(0xFF1C1C1C),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 20, 
-                                          vertical: 18,   
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 18,
+                                            ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF2E2E2E),
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF2E2E2E),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFFF6D736)),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFFF6D736),
+                                          ),
                                         ),
                                       ),
                                       validator: (value) {
-                                        if (value == null || value.trim().isEmpty) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
                                           return 'Please enter your name to continue';
                                         }
                                         return null;
@@ -230,29 +242,36 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         style: FilledButton.styleFrom(
                                           backgroundColor: neonYellow,
                                           foregroundColor: Colors.black,
-                                          padding: const EdgeInsets.symmetric(vertical: 20),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 20,
+                                          ),
                                           textStyle: const TextStyle(
                                             fontFamily: 'MightySouly',
                                             fontSize: 24,
                                             letterSpacing: 0,
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(30),
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
                                           ),
                                         ),
-                                        onPressed: _isSaving ? null : _saveAndContinue,
+                                        onPressed: _isSaving
+                                            ? null
+                                            : _saveAndContinue,
                                         child: _isSaving
                                             ? const SizedBox(
                                                 width: 22,
                                                 height: 22,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 3,
-                                                ),
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 3,
+                                                    ),
                                               )
                                             : const Text('Start Learning'),
                                       ),
                                     ),
-                                  ]
+                                  ],
                                 ),
                               ),
                             ],
@@ -297,11 +316,9 @@ class _AvatarCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(36),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(36)),
           clipBehavior: Clip.hardEdge,
-          child: Image.asset(asset, fit: BoxFit.cover)
+          child: Image.asset(asset, fit: BoxFit.cover),
         ),
       ),
     );
