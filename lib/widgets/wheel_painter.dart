@@ -15,18 +15,18 @@ class WheelPainter extends CustomPainter {
     final segmentAngle = (2 * math.pi) / labels.length;
     final baseStart = -math.pi / 2 - segmentAngle / 2;
 
-    // Рисуем сегменты
+    // Draw segments
     for (var i = 0; i < labels.length; i++) {
       final startAngle = baseStart + i * segmentAngle;
       
-      // Создаем радиальный градиент от темного центра к цветному краю
+      // Create a radial gradient from the dark center to the colored edge
       final gradient = RadialGradient(
         center: Alignment.center,
         radius: 1.0,
         colors: [
-          const Color(0xFF2A2A2A), // Темный центр
-          const Color(0xFF1A1A1A), // Средний
-          const Color(0xFFe58923), // Крайний
+          const Color(0xFF2A2A2A), // Dark center
+          const Color(0xFF1A1A1A), // Middle
+          const Color(0xFFe58923), // Edge
         ],
         stops: const [0.0, 0.4, 1],
       );
@@ -36,10 +36,10 @@ class WheelPainter extends CustomPainter {
         ..style = PaintingStyle.fill
         ..shader = gradient.createShader(segmentRect);
 
-      // Рисуем сегмент
+      // Draw the segment
       canvas.drawArc(segmentRect, startAngle, segmentAngle, true, gradientPaint);
 
-      // Рисуем толстые черные разделители
+      // Draw thick black dividers
       final borderPaint = Paint()
         ..style = PaintingStyle.stroke
         ..color = Colors.black
@@ -47,7 +47,7 @@ class WheelPainter extends CustomPainter {
       
       canvas.drawArc(segmentRect, startAngle, segmentAngle, true, borderPaint);
 
-      // Рисуем текст
+      // Draw text
       _drawSegmentText(
         canvas,
         labels[i],
@@ -57,7 +57,7 @@ class WheelPainter extends CustomPainter {
       );
     }
 
-    // Рисуем внешнюю черную обводку
+    // Draw outer black border
     final outerBorderPaint = Paint()
       ..style = PaintingStyle.stroke
       ..color = Colors.black

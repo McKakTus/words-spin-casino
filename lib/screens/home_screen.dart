@@ -5,6 +5,7 @@ import '../helpers/image_paths.dart';
 
 import 'spin_screen.dart';
 import 'stats_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -49,9 +50,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 20),
                       MenuButton(
                         text: 'Settings',
-                        onPressed: () {
-                          // TODO: переход на экран Settings
-                        },
+                        onPressed: () => Navigator.of(context).pushNamed(SettingsScreen.routeName),
                       ),
                       const SizedBox(height: 20),
                       MenuButton(
