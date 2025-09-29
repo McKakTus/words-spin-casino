@@ -3,6 +3,7 @@ class Images {
 
   static const String background = '$_path/background_b.jpg';
   static const String arrow = '$_path/arrow.png';
+  static const String coin = '$_path/coin.png';
 
   static const List<String> sectors = [
     '$_path/sectors/s1.png',

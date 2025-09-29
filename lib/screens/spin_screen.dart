@@ -90,7 +90,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/images/background_b.jpg', fit: BoxFit.cover),
+        Image.asset(Images.background, fit: BoxFit.cover),
 
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
@@ -512,9 +512,9 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 76 + MediaQuery.paddingOf(context).top + 10,
+      height: 86 + MediaQuery.paddingOf(context).top,
       padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 10,
+        top: MediaQuery.paddingOf(context).top,
         left: 16,
         right: 16,
       ),
@@ -539,6 +539,25 @@ class _ProfileHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          IconButton.filled(
+            iconSize: 18,
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Color(0xFF232522), 
+              foregroundColor: Colors.white,                    
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),                      
+              padding: const EdgeInsets.all(8),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+
+          const SizedBox(width: 6),
+          
           // Avatar
           Container(
             width: 54,
@@ -618,10 +637,10 @@ class _ProfileHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Image.asset('assets/images/coin.png', width: 24),
+                Image.asset(Images.coin, width: 24),
                 const SizedBox(width: 20),
                 Text(
-                  '${progress.xp}',
+                  progress.coins.toString(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

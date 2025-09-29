@@ -20,7 +20,11 @@ class StatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(sharedPreferencesProvider);
     final questionsAsync = ref.watch(quizQuestionsProvider);
-    final progressAsync = ref.watch(playerProgressProvider);
+    final progressAsync  = ref.watch(playerProgressProvider);
+
+    final prefs        = prefsAsync.valueOrNull;
+    final userName     = prefs?.getString('userName') ?? 'Explorer';
+    final avatarIndex  = prefs?.getInt('profileAvatar') ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -28,53 +32,47 @@ class StatsScreen extends ConsumerWidget {
         Image.asset(Images.background, fit: BoxFit.cover),
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(20)),
+          child: Container(color: Colors.black.withOpacity(0.26)),
         ),
         Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          body: Column(
+            children: [
+              Expanded(
+                child: progressAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => _ErrorState(message: e.toString()),
+                  data: (PlayerProgress progress) {
+                    return questionsAsync.when(
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (e, _) => _ErrorState(message: e.toString()),
+                      data: (List<QuizQuestion> questions) {
+                        return Column(
+                          children: [
+                            _ProfileHeader(
+                              userName: userName,
+                              avatarIndex: avatarIndex,
+                              progress: progress,
+                              onStatsTap: () => Navigator.of(context).pop(),
+                            ),
+                            Expanded(
+                              child: _StatsContent(
+                                userName: userName,
+                                avatarIndex: avatarIndex,
+                                progress: progress,
+                                questions: questions,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text(
-              'Stats & Rewards',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-                color: Colors.white,
-                letterSpacing: 0.6,
-              ),
-            ),
-          ),
-          body: SafeArea(
-            top: false,
-            child: questionsAsync.when(
-              data: (questions) => progressAsync.when(
-                data: (progress) {
-                  final prefs = prefsAsync.valueOrNull;
-                  final userName = prefs?.getString('userName') ?? 'Explorer';
-                  final avatarIndex = prefs?.getInt('profileAvatar') ?? 0;
-
-                  return _StatsContent(
-                    userName: userName,
-                    avatarIndex: avatarIndex,
-                    progress: progress,
-                    questions: questions,
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => _ErrorState(message: error.toString()),
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _ErrorState(message: error.toString()),
-            ),
+            ],
           ),
         ),
       ],
@@ -182,7 +180,7 @@ class _StatsContent extends StatelessWidget {
     ];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -197,8 +195,8 @@ class _StatsContent extends StatelessWidget {
             'Progress Overview',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
             ),
           ),
           const SizedBox(height: 12),
@@ -216,7 +214,6 @@ class _StatsContent extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
-                        letterSpacing: 0.3,
                       ),
                     ),
                     Text(
@@ -254,13 +251,6 @@ class _StatsContent extends StatelessWidget {
                       value: completedQuizzes.toString(),
                       icon: Icons.bolt_rounded,
                     ),
-                    _ProgressChip(
-                      label: 'Categories',
-                      value: completedCategories.isEmpty
-                          ? 'None yet'
-                          : completedCategories.join(', '),
-                      icon: Icons.category_rounded,
-                    ),
                   ],
                 ),
               ],
@@ -271,8 +261,8 @@ class _StatsContent extends StatelessWidget {
             'Key Stats',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
             ),
           ),
           const SizedBox(height: 12),
@@ -282,12 +272,14 @@ class _StatsContent extends StatelessWidget {
             'Achievements',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
             ),
           ),
           const SizedBox(height: 12),
           _AchievementsList(achievements: achievements),
+
+          const SizedBox(height: 44),
         ],
       ),
     );
@@ -360,98 +352,25 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFBC2F), Color(0xFFFEA629)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFffbc2f), Color(0xFFfeb229)],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFFe58923), width: 3),
+        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x44000000),
-            blurRadius: 18,
-            offset: Offset(0, 14),
+            color: Color(0x33000000),
+            blurRadius: 10,
+            offset: Offset(0, 6),
           ),
         ],
-        border: Border.all(color: Colors.white.withAlpha(20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: Colors.white.withAlpha(77),
-                    width: 2,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  Images.avatars[avatarIndex % Images.avatars.length],
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      progress.levelLabel,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(31),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'COINS',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 11,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    Text(
-                      progress.coins.toString(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 22),
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -838,6 +757,166 @@ const BoxDecoration _glassDecoration = BoxDecoration(
   borderRadius: BorderRadius.all(Radius.circular(24)),
   border: Border.fromBorderSide(BorderSide(color: Colors.white12)),
   boxShadow: [
-    BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 16)),
+    BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 1)),
   ],
 );
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.userName,
+    required this.avatarIndex,
+    required this.progress,
+    required this.onStatsTap,
+  });
+
+  final String userName;
+  final int avatarIndex;
+  final PlayerProgress progress;
+  final VoidCallback onStatsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 86 + MediaQuery.paddingOf(context).top,
+      padding: EdgeInsets.only(
+        top: MediaQuery.paddingOf(context).top,
+        left: 16,
+        right: 16,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFFe58923), width: 3),
+        ),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFffbc2f), Color(0xFFfeb229)],
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 10,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton.filled(
+            iconSize: 18,
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Color(0xFF232522), 
+              foregroundColor: Colors.white,                    
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),                      
+              padding: const EdgeInsets.all(8),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+
+          const SizedBox(width: 6),
+          
+          // Avatar
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.transparent,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              Images.avatars[avatarIndex % Images.avatars.length],
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Username
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    Text(
+                      userName.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 26,
+                        height: 1,
+                        foreground: Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 4
+                          ..color = const Color(0xFFE2B400),
+                      ),
+                    ),
+                    Text(
+                      userName.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        height: 1,
+                        color: Color(0xFF000000),
+                        shadows: [
+                          Shadow(
+                            color: const Color(0xFFF6D736),
+                            blurRadius: 2,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 2),
+
+                Text(
+                  progress.levelLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF232522),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Coins pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF232522),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              children: [
+                Image.asset(Images.coin, width: 24),
+                const SizedBox(width: 20),
+                Text(
+                  progress.coins.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
