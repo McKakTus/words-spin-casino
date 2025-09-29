@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/image_paths.dart';
 
+import '../widgets/wheel_display.dart';
+
 import '../models/player_progress.dart';
 import '../models/quiz_question.dart';
 
@@ -39,7 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _isSpinning = false;
   QuizQuestion? _pendingQuestion;
 
-  static const int _segmentCount = 12;
+  static const int _segmentCount = 8;
 
   @override
   void initState() {
@@ -234,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               height: 48,
                               child: CircularProgressIndicator(),
                             )
-                          : _WheelDisplay(
+                          : WheelDisplay(
                               controller: _controller,
                               rotationAnimation: _rotationAnimation,
                               currentRotation: _currentRotation,
@@ -642,210 +644,6 @@ class _ProfileHeader extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _WheelDisplay extends StatelessWidget {
-  const _WheelDisplay({
-    required this.controller,
-    required this.rotationAnimation,
-    required this.currentRotation,
-    required this.segments,
-  });
-
-  final AnimationController controller;
-  final Animation<double>? rotationAnimation;
-  final double currentRotation;
-  final List<QuizQuestion> segments;
-
-  static const _segmentCount = 12;
-
-  @override
-  Widget build(BuildContext context) {
-    if (segments.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return SizedBox(
-      width: 300,
-      height: 300,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AnimatedBuilder(
-            animation: controller,
-            builder: (context, child) {
-              final angle = rotationAnimation?.value ?? currentRotation;
-              return Transform.rotate(angle: angle, child: child);
-            },
-            child: CustomPaint(
-              painter: _WheelPainter(
-                labels: List<String>.generate(_segmentCount, (index) {
-                  final quiz = segments[index % segments.length];
-                  final label = quiz.category?.toUpperCase() ?? 'QUIZ';
-                  return _formatLabel(label);
-                }),
-              ),
-              child: const SizedBox.expand(),
-            ),
-          ),
-          Positioned(
-            top: 8,
-            child: Container(
-              width: 58,
-              height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF6D736),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x66F6D736),
-                    blurRadius: 16,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.expand_more,
-                color: Colors.black,
-                size: 38,
-              ),
-            ),
-          ),
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF101010), Color(0xFF1C1C1C)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(color: Colors.white12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 12),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'Find your quiz',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFFB3B3B3),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _formatLabel(String text) {
-    const int limit = 36;
-    final sanitized = text.replaceAll('\n', ' ').trim();
-    if (sanitized.length <= limit) {
-      return sanitized;
-    }
-    return '${sanitized.substring(0, limit - 1)}…';
-  }
-}
-
-class _WheelPainter extends CustomPainter {
-  _WheelPainter({required this.labels});
-
-  final List<String> labels;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.width / 2;
-    final segmentAngle = (2 * math.pi) / labels.length;
-    final baseStart = -math.pi / 2 - segmentAngle / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final List<Color> segmentColors = [
-      const Color(0xFF2F2F2F),
-      const Color(0xFF232323),
-    ];
-
-    for (var i = 0; i < labels.length; i++) {
-      final startAngle = baseStart + i * segmentAngle;
-      final fillPaint = Paint()
-        ..style = PaintingStyle.fill
-        ..shader = RadialGradient(
-          colors: [
-            segmentColors[i % segmentColors.length],
-            const Color(0xFF151515),
-          ],
-        ).createShader(rect);
-
-      canvas.drawArc(rect, startAngle, segmentAngle, true, fillPaint);
-
-      final borderPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..color = Colors.black.withAlpha(64)
-        ..strokeWidth = 2.2;
-      canvas.drawArc(
-        rect.deflate(1.5),
-        startAngle,
-        segmentAngle,
-        true,
-        borderPaint,
-      );
-
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: labels[i],
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            height: 1.2,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        maxLines: 2,
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: radius * 0.9);
-
-      final textAngle = startAngle + segmentAngle / 2;
-      final textRadius = radius * 0.62;
-      final textOffset = Offset(
-        center.dx + textRadius * math.cos(textAngle) - textPainter.width / 2,
-        center.dy + textRadius * math.sin(textAngle) - textPainter.height / 2,
-      );
-
-      canvas.save();
-      canvas.translate(
-        textOffset.dx + textPainter.width / 2,
-        textOffset.dy + textPainter.height / 2,
-      );
-      canvas.rotate(-textAngle + math.pi / 2);
-      canvas.translate(-textPainter.width / 2, -textPainter.height / 2);
-      textPainter.paint(canvas, Offset.zero);
-      canvas.restore();
-    }
-
-    final innerPaint = Paint()
-      ..color = const Color(0xFF101010)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.28, innerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _WheelPainter oldDelegate) {
-    if (oldDelegate.labels.length != labels.length) return true;
-    for (var i = 0; i < labels.length; i++) {
-      if (oldDelegate.labels[i] != labels[i]) return true;
-    }
-    return false;
   }
 }
 
