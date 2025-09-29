@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:spin_to_learn/main.dart';
+import 'package:quizspincasino/main.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +13,7 @@ void main() {
   });
 
   testWidgets('Splash screen shows app title', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: SpinToLearnApp()));
+    await tester.pumpWidget(const ProviderScope(child: QuizSpinCasinoApp()));
     await tester.pump();
 
     expect(find.byType(Scaffold), findsOneWidget);

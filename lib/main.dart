@@ -8,11 +8,11 @@ import 'screens/stats_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: SpinToLearnApp()));
+  runApp(const ProviderScope(child: QuizSpinCasinoApp()));
 }
 
-class SpinToLearnApp extends StatelessWidget {
-  const SpinToLearnApp({super.key});
+class QuizSpinCasinoApp extends StatelessWidget {
+  const QuizSpinCasinoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
