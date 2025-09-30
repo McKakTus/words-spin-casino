@@ -39,8 +39,6 @@ dependencies:
   flutter_tts: ^4.0.2
   confetti: ^0.7.0
   webview_flutter: ^4.13.0
-  firebase_remote_config: ^6.0.0
-  firebase_core: ^4.0.0
 
 dev_dependencies:
   flutter_test:
