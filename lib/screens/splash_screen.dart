@@ -62,7 +62,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Container(color: Colors.black.withAlpha(26)),
         ),
 
-        Scaffold(backgroundColor: Colors.transparent, body: Container()),
+        Scaffold(
+          backgroundColor: Colors.transparent, 
+          body: Center(
+            child: SizedBox(
+              width: 200,
+              child: Image.asset(Images.logo),
+            ),
+          ),
+        ),
       ],
     );
   }

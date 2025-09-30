@@ -32,10 +32,10 @@ class HomeScreen extends StatelessWidget {
                 // Logo
                 const Spacer(),
                 
-                // SizedBox(
-                //   width: 240,
-                //   child: Image.asset(Images.background),
-                // ),
+                SizedBox(
+                  width: 200,
+                  child: Image.asset(Images.logo),
+                ),
               
                 const Spacer(),
 
@@ -96,8 +96,10 @@ class MenuButton extends StatelessWidget {
         ),
         child: FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFffaf28),
-            foregroundColor: Colors.black,
+            backgroundColor: Color(0xFF141414),
+            foregroundColor: Color(0xFFffaf28),
+            // backgroundColor: const Color(0xFFffaf28),
+            // foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 18),
             textStyle: const TextStyle(
               fontFamily: 'MightySouly',

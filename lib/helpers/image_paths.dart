@@ -1,6 +1,8 @@
 class Images {
   static const String _path = 'assets/images';
 
+  static const String logo = '$_path/logo.png';
+  static const String logoA = '$_path/logo_a.png';
   static const String background = '$_path/background_b.jpg';
   static const String arrow = '$_path/arrow.png';
   static const String coin = '$_path/coin.png';

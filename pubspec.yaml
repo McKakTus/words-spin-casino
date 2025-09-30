@@ -68,6 +68,8 @@ flutter:
     - assets/quiz.json
     - assets/images/avatars/
     - assets/images/sectors/
+    - assets/images/logo.png
+    - assets/images/logo_a.png
     - assets/images/coin.png
     - assets/images/arrow.png
     - assets/images/background.jpg
