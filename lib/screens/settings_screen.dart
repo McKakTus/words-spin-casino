@@ -35,7 +35,7 @@ class SettingsScreen extends ConsumerWidget {
 
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withOpacity(0.26)),
+          child: Container(color: Colors.black.withAlpha(66)),
         ),
 
         Scaffold(
@@ -50,7 +50,7 @@ class SettingsScreen extends ConsumerWidget {
                     progress: progress,
                     onStatsTap: () => Navigator.of(context).pop(),
                   ),
-                  
+
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 56),
@@ -59,7 +59,9 @@ class SettingsScreen extends ConsumerWidget {
                         children: [
                           MenuButton(
                             text: 'Profile',
-                            onTap: () => Navigator.of(context).pushNamed(ProfileScreen.routeName),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pushNamed(ProfileScreen.routeName),
                           ),
                           const SizedBox(height: 20),
                           MenuButton(
@@ -92,8 +94,7 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               );
             },
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => _ErrorState(message: e.toString()),
           ),
         ),
@@ -106,11 +107,7 @@ class MenuButton extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
 
-  const MenuButton({
-    super.key,
-    required this.text,
-    required this.onTap,
-  });
+  const MenuButton({super.key, required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -119,10 +116,7 @@ class MenuButton extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           border: const Border(
-            bottom: BorderSide(
-              color: Color(0xFFe58923),
-              width: 3,
-            ),
+            bottom: BorderSide(color: Color(0xFFe58923), width: 3),
           ),
           borderRadius: BorderRadius.circular(34),
         ),
@@ -131,10 +125,7 @@ class MenuButton extends StatelessWidget {
             backgroundColor: const Color(0xFFffaf28),
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 18),
-            textStyle: const TextStyle(
-              fontFamily: 'MightySouly',
-              fontSize: 24,
-            ),
+            textStyle: const TextStyle(fontFamily: 'MightySouly', fontSize: 24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),

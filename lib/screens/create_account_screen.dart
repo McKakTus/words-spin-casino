@@ -182,6 +182,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                       controller: _nameController,
                                       style: const TextStyle(
                                         color: Colors.white,
+                                        fontSize: 24,
                                       ),
                                       decoration: InputDecoration(
                                         labelText: 'Display name',

@@ -1,20 +1,30 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/image_paths.dart';
 import '../providers/storage_providers.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   static const routeName = '/profile';
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const _ProfileScreenBody();
+  }
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenBody extends ConsumerStatefulWidget {
+  const _ProfileScreenBody();
+
+  @override
+  ConsumerState<_ProfileScreenBody> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   final _page = PageController(viewportFraction: 0.65);
@@ -51,7 +61,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (!mounted) return;
     setState(() => _isSaving = false);
 
-    Navigator.of(context).pop(); // вернуться назад после сохранения
+    Navigator.of(context).pop(); 
   }
 
   @override
@@ -66,7 +76,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (!_loaded) {
           _nameController.text = prefs.getString('userName') ?? '';
           _index = prefs.getInt('profileAvatar') ?? 0;
-          // прокрутить PageView к сохранённому аватару
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_page.hasClients) {
               _page.jumpToPage(_index);
@@ -81,7 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Image.asset(Images.background, fit: BoxFit.cover),
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: Container(color: Colors.black.withOpacity(0.26)),
+              child: Container(color: Colors.black.withAlpha(66)),
             ),
             Scaffold(
               backgroundColor: Colors.transparent,
@@ -97,25 +106,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         key: _formKey,
                         child: Column(
                           children: [
-                            // Заголовок
-                            const Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                fontSize: 36,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black54,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 2),
+                            Stack(
+                              children: [
+                                Text(
+                                  'Edit Profile',
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    foreground: Paint()
+                                      ..style = PaintingStyle.stroke
+                                      ..strokeWidth = 4
+                                      ..color = const Color(0xFFE2B400),
                                   ),
-                                ],
-                              ),
+                                ),
+                                Text(
+                                  'Edit Profile',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    color: Color(0xFF000000),
+                                    shadows: [
+                                      Shadow(
+                                        color: const Color(0xFFF6D736),
+                                        blurRadius: 2,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 20),
 
-                            // Карусель аватаров
+                            const SizedBox(height: 36),
+
                             SizedBox(
                               height: 270,
                               child: PageView.builder(
@@ -131,14 +156,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Поле ввода имени
                             Container(
                               margin: const EdgeInsets.symmetric(
                                 horizontal: 40,
                               ),
                               child: TextFormField(
                                 controller: _nameController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(
+                                  color: Colors.white, 
+                                  fontSize: 24,
+                                ),
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(
                                   hintText: 'Enter your name',
@@ -180,17 +207,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Кнопка сохранить
                             Container(
                               width: double.infinity,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 56),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                              ),
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: _isSaving
-                                        ? const Color(0x669E9E9E)
-                                        : const Color(0xFFe58923),
+                                    color: const Color(0xFFe58923),
                                     width: 3,
                                   ),
                                 ),
@@ -200,8 +225,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 style: FilledButton.styleFrom(
                                   backgroundColor: neonYellow,
                                   foregroundColor: Colors.black,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 20,
+                                  ),
                                   textStyle: const TextStyle(
                                     fontFamily: 'MightySouly',
                                     fontSize: 24,
@@ -223,6 +249,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     : const Text('Save Profile'),
                               ),
                             ),
+
+                            const Spacer(),
+
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: const Color(0xFFe58923),
+                                    width: 1,
+                                  ),
+                                ),
+                                borderRadius: BorderRadius.circular(34),
+                              ),
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 20,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'MightySouly',
+                                    fontSize: 24,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(32),
+                                  ),
+                                ),
+                                onPressed: _isSaving ? null : _saveProfile,
+                                child: _isSaving
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        color: Colors.black,
+                                      ),
+                                    )
+                                  : const Text('Log Out'),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -236,10 +307,95 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) =>
-          Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
+}
+
+Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  final shouldReset =
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF141414),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: const Text(
+            'Are you sure you want to delete your account?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFFFAF28),
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  if (!shouldReset) return;
+
+  await ref.read(playerProgressProvider.notifier).resetProgress();
+  if (!context.mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Progress reset. Spin the wheel for a fresh start!'),
+    ),
+  );
+}
+
+Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+  final shouldReset =
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF141414),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: const Text(
+            'Are you sure you want \n to log out?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFFFAF28),
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  if (!shouldReset) return;
+
+  await ref.read(playerProgressProvider.notifier).resetProgress();
+  if (!context.mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Progress reset. Spin the wheel for a fresh start!'),
+    ),
+  );
 }
 
 class _AvatarCard extends StatelessWidget {
