@@ -14,20 +14,26 @@ import '../providers/player_progress_provider.dart';
 import '../providers/quiz_providers.dart';
 import '../providers/storage_providers.dart';
 
-class StatsScreen extends ConsumerWidget {
+import 'create_account_screen.dart';
+import 'login_screen.dart';
+
+class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
 
   static const routeName = '/stats';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final prefsAsync = ref.watch(sharedPreferencesProvider);
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends ConsumerState<StatsScreen> {
+  bool _isRedirecting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(activeProfileProvider);
     final questionsAsync = ref.watch(quizQuestionsProvider);
     final progressAsync = ref.watch(playerProgressProvider);
-
-    final prefs = prefsAsync.valueOrNull;
-    final userName = prefs?.getString('userName') ?? 'Explorer';
-    final avatarIndex = prefs?.getInt('profileAvatar') ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -49,32 +55,49 @@ class StatsScreen extends ConsumerWidget {
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) => _ErrorState(message: e.toString()),
                   data: (PlayerProgress progress) {
-                    return questionsAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => _ErrorState(message: e.toString()),
-                      data: (List<QuizQuestion> questions) {
-                        return Column(
-                          children: [
-                            ProfileHeader(
-                              userName: userName,
-                              avatarIndex: avatarIndex,
-                              progress: progress,
-                              onStatsTap: () => Navigator.of(context).pop(),
-                            ),
-                            Expanded(
-                              child: _StatsContent(
-                                userName: userName,
-                                avatarIndex: avatarIndex,
-                                progress: progress,
-                                questions: questions,
-                                onResetPressed: () =>
-                                  _handleReset(context, ref),
-                              ),
-                            ),
-                          ],
+                    return profileAsync.when(
+                      data: (profile) {
+                        if (profile == null) {
+                          _redirectToAuth();
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        return questionsAsync.when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (e, _) =>
+                              _ErrorState(message: e.toString()),
+                          data: (List<QuizQuestion> questions) {
+                            return Column(
+                              children: [
+                                ProfileHeader(
+                                  userName: profile.name,
+                                  avatarIndex: profile.avatarIndex,
+                                  progress: progress,
+                                  onStatsTap: () =>
+                                      Navigator.of(context).pop(),
+                                ),
+                                Expanded(
+                                  child: _StatsContent(
+                                    userName: profile.name,
+                                    avatarIndex: profile.avatarIndex,
+                                    progress: progress,
+                                    questions: questions,
+                                    onResetPressed: () =>
+                                        _handleReset(context, ref),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, _) =>
+                          _ErrorState(message: e.toString()),
                     );
                   },
                 ),
@@ -84,6 +107,21 @@ class StatsScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  void _redirectToAuth() {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      final profiles = readAllProfiles(prefs);
+      if (!mounted) return;
+      final route = profiles.isEmpty
+          ? CreateAccountScreen.routeName
+          : LoginScreen.routeName;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(route, (route) => false);
+    });
   }
 }
 

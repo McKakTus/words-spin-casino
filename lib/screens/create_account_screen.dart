@@ -1,11 +1,14 @@
-import 'package:flutter/material.dart';
 import 'dart:ui';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/storage_providers.dart';
 import '../helpers/image_paths.dart';
+import '../providers/player_progress_provider.dart';
+import '../providers/storage_providers.dart';
 
 import 'home_screen.dart';
+import 'login_screen.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
@@ -49,8 +52,25 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     final trimmedName = _nameController.text.trim();
 
-    await prefs.setString('userName', trimmedName);
-    await prefs.setInt('profileAvatar', _index);
+    final existing = findProfileByName(prefs, trimmedName);
+    if (existing != null) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile "$trimmedName" already exists. Try logging in.')),
+      );
+      return;
+    }
+
+    final profile = ProfileData(
+      id: generateProfileId(trimmedName),
+      name: trimmedName,
+      avatarIndex: _index,
+    );
+
+    await saveProfile(prefs, profile);
+    ref.invalidate(sharedPreferencesProvider);
+    ref.invalidate(playerProgressProvider);
 
     if (!mounted) return;
     setState(() {
@@ -70,10 +90,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     return prefsAsync.when(
       data: (prefs) {
         if (!_hasLoadedInitialName) {
-          final existingName = prefs.getString('userName') ?? '';
-          if (existingName.isNotEmpty && _nameController.text != existingName) {
-            _nameController.text = existingName;
-          }
+          _nameController.clear();
           _hasLoadedInitialName = true;
         }
         return Stack(
@@ -182,7 +199,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                       controller: _nameController,
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 24,
+                                        fontSize: 20,
                                       ),
                                       decoration: InputDecoration(
                                         labelText: 'Display name',
@@ -205,7 +222,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                             ),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
-                                            16,
+                                            36,
                                           ),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF2E2E2E),
@@ -213,7 +230,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
-                                            16,
+                                            36,
                                           ),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF2E2E2E),
@@ -221,7 +238,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
-                                            16,
+                                            36,
                                           ),
                                           borderSide: BorderSide(
                                             color: Color(0xFFF6D736),
@@ -280,7 +297,20 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                                       strokeWidth: 3,
                                                     ),
                                               )
-                                            : const Text('Start Learning'),
+                                            : const Text('Create profile'),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextButton(
+                                      onPressed: _isSaving
+                                          ? null
+                                          : () => Navigator.of(context)
+                                              .pushReplacementNamed(
+                                                LoginScreen.routeName,
+                                              ),
+                                      child: const Text(
+                                        'Already have a profile? Log in',
+                                        style: TextStyle(color: Colors.white70),
                                       ),
                                     ),
                                   ],

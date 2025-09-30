@@ -8,6 +8,7 @@ import '../providers/storage_providers.dart';
 
 import 'create_account_screen.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -31,11 +32,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await Future<void>.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    final storedName = prefs.getString('userName');
-    if (storedName == null || storedName.isEmpty) {
-      Navigator.of(context).pushReplacementNamed(CreateAccountScreen.routeName);
-    } else {
+
+    final profile = readActiveProfile(prefs);
+    if (profile != null) {
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      return;
+    }
+
+    final profiles = readAllProfiles(prefs);
+    if (profiles.isNotEmpty) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+    } else {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(CreateAccountScreen.routeName);
     }
   }
 

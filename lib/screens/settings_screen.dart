@@ -13,6 +13,7 @@ import '../providers/storage_providers.dart';
 
 import 'profile_screen.dart';
 import 'web_screen.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -21,12 +22,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prefsAsync = ref.watch(sharedPreferencesProvider);
+    final profileAsync = ref.watch(activeProfileProvider);
     final progressAsync = ref.watch(playerProgressProvider);
-
-    final prefs = prefsAsync.valueOrNull;
-    final userName = prefs?.getString('userName') ?? 'Explorer';
-    final avatarIndex = prefs?.getInt('profileAvatar') ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -41,59 +38,72 @@ class SettingsScreen extends ConsumerWidget {
         Scaffold(
           backgroundColor: Colors.transparent,
           body: progressAsync.when(
-            data: (progress) {
-              return Column(
-                children: [
-                  ProfileHeader(
-                    userName: userName,
-                    avatarIndex: avatarIndex,
-                    progress: progress,
-                    onStatsTap: () => Navigator.of(context).pop(),
-                  ),
+            data: (progress) => profileAsync.when(
+              data: (profile) {
+                if (profile == null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!context.mounted) return;
+                    Navigator.of(
+                      context,
+                    ).pushReplacementNamed(LoginScreen.routeName);
+                  });
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 56),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          MenuButton(
-                            text: 'Profile',
-                            onTap: () => Navigator.of(
-                              context,
-                            ).pushNamed(ProfileScreen.routeName),
-                          ),
-                          const SizedBox(height: 20),
-                          MenuButton(
-                            text: 'Privacy Policy',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => WebScreen(
-                                  title: 'Privacy Policy',
-                                  link: AppLinks.privacyPolicy,
+                return Column(
+                  children: [
+                    ProfileHeader(
+                      userName: profile.name,
+                      avatarIndex: profile.avatarIndex,
+                      progress: progress,
+                      onStatsTap: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 56),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            MenuButton(
+                              text: 'Profile',
+                              onTap: () => Navigator.of(
+                                context,
+                              ).pushNamed(ProfileScreen.routeName),
+                            ),
+                            const SizedBox(height: 20),
+                            MenuButton(
+                              text: 'Privacy Policy',
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => WebScreen(
+                                    title: 'Privacy Policy',
+                                    link: AppLinks.privacyPolicy,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          MenuButton(
-                            text: 'Terms & Conditions',
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => WebScreen(
-                                  title: 'Terms & Conditions',
-                                  link: AppLinks.terms,
+                            const SizedBox(height: 20),
+                            MenuButton(
+                              text: 'Terms & Conditions',
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => WebScreen(
+                                    title: 'Terms & Conditions',
+                                    link: AppLinks.terms,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => _ErrorState(message: e.toString()),
+            ),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => _ErrorState(message: e.toString()),
           ),

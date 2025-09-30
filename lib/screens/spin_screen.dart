@@ -19,6 +19,8 @@ import '../providers/storage_providers.dart';
 
 import 'quiz_screen.dart';
 import 'stats_screen.dart';
+import 'login_screen.dart';
+import 'create_account_screen.dart';
 
 class SpinScreen extends ConsumerStatefulWidget {
   const SpinScreen({super.key});
@@ -41,8 +43,9 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   String? _usedSignature;
   bool _isSpinning = false;
   QuizQuestion? _pendingQuestion;
+  bool _isRedirecting = false;
 
-  static const int _segmentCount = 8;
+  static const int _segmentCount = 12;
 
   @override
   void initState() {
@@ -66,27 +69,9 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
 
   @override
   Widget build(BuildContext context) {
-    final prefsAsync = ref.watch(sharedPreferencesProvider);
-
-    final userName = prefsAsync.maybeWhen(
-      data: (prefs) => prefs.getString('userName') ?? 'Explorer',
-      orElse: () => 'Explorer',
-    );
-
-    final avatarIndex = prefsAsync.maybeWhen(
-      data: (prefs) => prefs.getInt('profileAvatar') ?? 0,
-      orElse: () => 0,
-    );
-
+    final profileAsync = ref.watch(activeProfileProvider);
     final questionsAsync = ref.watch(quizQuestionsProvider);
     final progressAsync = ref.watch(playerProgressProvider);
-
-    if (questionsAsync.hasValue && progressAsync.hasValue) {
-      _scheduleWheelSync(
-        questionsAsync.value ?? const [],
-        progressAsync.value!,
-      );
-    }
 
     return Stack(
       fit: StackFit.expand,
@@ -100,18 +85,37 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
 
         Scaffold(
           backgroundColor: Colors.transparent,
-          body: questionsAsync.when(
-            data: (questions) => progressAsync.when(
-              data: (progress) => _buildContent(
-                context,
-                userName,
-                avatarIndex,
-                questions,
-                progress,
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _ErrorState(message: error.toString()),
-            ),
+          body: profileAsync.when(
+            data: (profile) {
+              if (profile == null) {
+                _redirectToAuth();
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (questionsAsync.hasValue && progressAsync.hasValue) {
+                _scheduleWheelSync(
+                  questionsAsync.value ?? const [],
+                  progressAsync.value!,
+                );
+              }
+
+              return questionsAsync.when(
+                data: (questions) => progressAsync.when(
+                  data: (progress) => _buildContent(
+                    context,
+                    profile,
+                    questions,
+                    progress,
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) =>
+                      _ErrorState(message: error.toString()),
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => _ErrorState(message: error.toString()),
+              );
+            },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => _ErrorState(message: error.toString()),
           ),
@@ -149,8 +153,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
 
   Widget _buildContent(
     BuildContext context,
-    String userName,
-    int avatarIndex,
+    ProfileData profile,
     List<QuizQuestion> questions,
     PlayerProgress progress,
   ) {
@@ -164,8 +167,8 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
     return Column(
       children: [
         ProfileHeader(
-          userName: userName,
-          avatarIndex: avatarIndex,
+          userName: profile.name,
+          avatarIndex: profile.avatarIndex,
           progress: progress,
           onStatsTap: () =>
               Navigator.of(context).pushNamed(StatsScreen.routeName),
@@ -308,6 +311,21 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
         ],
       ],
     );
+  }
+
+  void _redirectToAuth() {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      final profiles = readAllProfiles(prefs);
+      if (!mounted) return;
+      final route = profiles.isEmpty
+          ? CreateAccountScreen.routeName
+          : LoginScreen.routeName;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(route, (route) => false);
+    });
   }
 
   String _buildSignature(Iterable<String> values) {

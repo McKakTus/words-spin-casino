@@ -4,17 +4,22 @@ import '../models/player_progress.dart';
 import 'storage_providers.dart';
 
 class PlayerProgressNotifier extends AsyncNotifier<PlayerProgress> {
-  static const _xpKey = 'playerXp';
-  static const _coinsKey = 'playerCoins';
-  static const _usedQuestionsKey = 'usedQuestions';
+  late String _profileId;
+
+  String _xpKey() => composeProfileKey(xpKeyBase, _profileId);
+  String _coinsKey() => composeProfileKey(coinsKeyBase, _profileId);
+  String _usedQuestionsKey() =>
+      composeProfileKey(usedQuestionsKeyBase, _profileId);
 
   @override
   Future<PlayerProgress> build() async {
     final prefs = await ref.watch(sharedPreferencesProvider.future);
+    final active = readActiveProfile(prefs);
+    _profileId = active?.id ?? 'default';
 
-    final xp = prefs.getInt(_xpKey) ?? 0;
-    final coins = prefs.getInt(_coinsKey) ?? 0;
-    final used = prefs.getStringList(_usedQuestionsKey) ?? <String>[];
+    final xp = prefs.getInt(_xpKey()) ?? 0;
+    final coins = prefs.getInt(_coinsKey()) ?? 0;
+    final used = prefs.getStringList(_usedQuestionsKey()) ?? <String>[];
 
     return PlayerProgress(xp: xp, coins: coins, usedQuestionIds: used.toSet());
   }
@@ -57,18 +62,18 @@ class PlayerProgressNotifier extends AsyncNotifier<PlayerProgress> {
       return current;
     }
     final prefs = await ref.read(sharedPreferencesProvider.future);
-    final xp = prefs.getInt(_xpKey) ?? 0;
-    final coins = prefs.getInt(_coinsKey) ?? 0;
-    final used = prefs.getStringList(_usedQuestionsKey) ?? <String>[];
+    final xp = prefs.getInt(_xpKey()) ?? 0;
+    final coins = prefs.getInt(_coinsKey()) ?? 0;
+    final used = prefs.getStringList(_usedQuestionsKey()) ?? <String>[];
     return PlayerProgress(xp: xp, coins: coins, usedQuestionIds: used.toSet());
   }
 
   Future<void> _persist(PlayerProgress progress) async {
     final prefs = await ref.read(sharedPreferencesProvider.future);
-    await prefs.setInt(_xpKey, progress.xp);
-    await prefs.setInt(_coinsKey, progress.coins);
+    await prefs.setInt(_xpKey(), progress.xp);
+    await prefs.setInt(_coinsKey(), progress.coins);
     await prefs.setStringList(
-      _usedQuestionsKey,
+      _usedQuestionsKey(),
       progress.usedQuestionIds.toList(),
     );
   }

@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/image_paths.dart';
 import '../providers/storage_providers.dart';
+import '../providers/player_progress_provider.dart';
+
+import 'create_account_screen.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -32,6 +36,8 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
   int _index = 0;
   bool _isSaving = false;
   bool _loaded = false;
+  String? _profileId;
+  bool _isRedirecting = false;
 
   @override
   void initState() {
@@ -45,37 +51,64 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
     super.dispose();
   }
 
-  Future<void> _saveProfile() async {
+  Future<void> _saveProfile(ProfileData profile) async {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
+    final trimmedName = _nameController.text.trim();
     FocusScope.of(context).unfocus();
     setState(() => _isSaving = true);
 
     final prefs = await ref.read(sharedPreferencesProvider.future);
-    final trimmedName = _nameController.text.trim();
+    final existing = findProfileByName(prefs, trimmedName);
+    if (existing != null && existing.id != profile.id) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Name "$trimmedName" already taken. Pick another.'),
+          ),
+        );
+      }
+      return;
+    }
 
-    await prefs.setString('userName', trimmedName);
-    await prefs.setInt('profileAvatar', _index);
+    final updated = ProfileData(
+      id: profile.id,
+      name: trimmedName,
+      avatarIndex: _index,
+    );
+
+    await saveProfile(prefs, updated);
+    ref.invalidate(sharedPreferencesProvider);
+    ref.invalidate(activeProfileProvider);
 
     if (!mounted) return;
     setState(() => _isSaving = false);
-
-    Navigator.of(context).pop(); 
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final prefsAsync = ref.watch(sharedPreferencesProvider);
+    final profileAsync = ref.watch(activeProfileProvider);
 
     const Color neonYellow = Color(0xFFffaf28);
     final paddingTop = MediaQuery.paddingOf(context).top + 20;
 
-    return prefsAsync.when(
-      data: (prefs) {
-        if (!_loaded) {
-          _nameController.text = prefs.getString('userName') ?? '';
-          _index = prefs.getInt('profileAvatar') ?? 0;
+    return profileAsync.when(
+      data: (profile) {
+        if (profile == null) {
+          _redirectAway();
+          return const Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!_loaded || _profileId != profile.id) {
+          _profileId = profile.id;
+          _nameController.text = profile.name;
+          _index = profile.avatarIndex;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_page.hasClients) {
               _page.jumpToPage(_index);
@@ -163,7 +196,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                               child: TextFormField(
                                 controller: _nameController,
                                 style: const TextStyle(
-                                  color: Colors.white, 
+                                  color: Colors.white,
                                   fontSize: 24,
                                 ),
                                 textAlign: TextAlign.center,
@@ -179,19 +212,19 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     vertical: 18,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(32),
                                     borderSide: const BorderSide(
                                       color: Color(0xFF2E2E2E),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(32),
                                     borderSide: const BorderSide(
                                       color: Color(0xFF2E2E2E),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(32),
                                     borderSide: const BorderSide(
                                       color: Color(0xFFF6D736),
                                     ),
@@ -236,7 +269,9 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     borderRadius: BorderRadius.circular(32),
                                   ),
                                 ),
-                                onPressed: _isSaving ? null : _saveProfile,
+                                onPressed: _isSaving
+                                    ? null
+                                    : () => _saveProfile(profile),
                                 child: _isSaving
                                     ? const SizedBox(
                                         width: 22,
@@ -250,7 +285,45 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                               ),
                             ),
 
-                            const Spacer(),
+                            const SizedBox(height: 56),
+
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: const Color(0xFFe58923),
+                                    width: 3,
+                                  ),
+                                ),
+                                borderRadius: BorderRadius.circular(34),
+                              ),
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Color(0xFFffaf28),
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 20,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'MightySouly',
+                                    fontSize: 24,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(32),
+                                  ),
+                                ),
+                                onPressed: _isSaving
+                                    ? null
+                                    : () => _confirmLogout(context, ref),
+                                child: const Text('Log Out'),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
 
                             Container(
                               width: double.infinity,
@@ -281,19 +354,15 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     borderRadius: BorderRadius.circular(32),
                                   ),
                                 ),
-                                onPressed: _isSaving ? null : _saveProfile,
-                                child: _isSaving
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        color: Colors.black,
-                                      ),
-                                    )
-                                  : const Text('Log Out'),
+                                onPressed: _isSaving
+                                    ? null
+                                    : () =>
+                                        _confirmDeleteAccount(context, ref),
+                                child: const Text('Delete Profile'),
                               ),
                             ),
+
+                            const SizedBox(height: 44),
                           ],
                         ),
                       ),
@@ -310,10 +379,25 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
+
+  void _redirectAway() {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      final profiles = readAllProfiles(prefs);
+      if (!mounted) return;
+      final route = profiles.isEmpty
+          ? CreateAccountScreen.routeName
+          : LoginScreen.routeName;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(route, (route) => false);
+    });
+  }
 }
 
 Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
-  final shouldReset =
+  final confirmed =
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -321,8 +405,12 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
+          title: const Text(
+            'Delete profile?',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
           content: const Text(
-            'Are you sure you want to delete your account?',
+            'This will erase your name, avatar, and all progress. Continue?',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -332,7 +420,7 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFFAF28),
+                backgroundColor: const Color(0xFFFF6E6E),
                 foregroundColor: Colors.black,
               ),
               onPressed: () => Navigator.of(context).pop(true),
@@ -343,20 +431,35 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
       ) ??
       false;
 
-  if (!shouldReset) return;
+  if (!confirmed) return;
 
-  await ref.read(playerProgressProvider.notifier).resetProgress();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
+  final profile = await ref.read(activeProfileProvider.future);
+  if (profile == null) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No active profile to delete.')),
+      );
+    }
+    return;
+  }
+
+  await deleteProfile(prefs, profile.id);
+  ref.invalidate(sharedPreferencesProvider);
+  ref.invalidate(activeProfileProvider);
+  ref.invalidate(playerProgressProvider);
+
+  final remaining = readAllProfiles(prefs);
   if (!context.mounted) return;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Progress reset. Spin the wheel for a fresh start!'),
-    ),
-  );
+  final nextRoute =
+      remaining.isEmpty ? CreateAccountScreen.routeName : LoginScreen.routeName;
+  Navigator.of(context)
+      .pushNamedAndRemoveUntil(nextRoute, (route) => false);
 }
 
 Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-  final shouldReset =
+  final confirmed =
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -364,8 +467,12 @@ Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
+          title: const Text(
+            'Log out?',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
           content: const Text(
-            'Are you sure you want \n to log out?',
+            'You will return to the onboarding screen and can sign in again later.',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -379,23 +486,28 @@ Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
                 foregroundColor: Colors.black,
               ),
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Yes'),
+              child: const Text('Log Out'),
             ),
           ],
         ),
       ) ??
       false;
 
-  if (!shouldReset) return;
+  if (!confirmed) return;
 
-  await ref.read(playerProgressProvider.notifier).resetProgress();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
+  await clearActiveProfile(prefs);
+  ref.invalidate(sharedPreferencesProvider);
+  ref.invalidate(activeProfileProvider);
+  ref.invalidate(playerProgressProvider);
+
+  final remaining = readAllProfiles(prefs);
   if (!context.mounted) return;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Progress reset. Spin the wheel for a fresh start!'),
-    ),
-  );
+  final nextRoute =
+      remaining.isEmpty ? CreateAccountScreen.routeName : LoginScreen.routeName;
+  Navigator.of(context)
+      .pushNamedAndRemoveUntil(nextRoute, (route) => false);
 }
 
 class _AvatarCard extends StatelessWidget {

@@ -19,13 +19,13 @@ class WheelDisplay extends StatelessWidget {
   final double currentRotation;
   final List<QuizQuestion> segments;
 
-  static const _segmentCount = 8;
-
   @override
   Widget build(BuildContext context) {
     if (segments.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final segmentCount = segments.length;
 
     return Container(
       width: 330,
@@ -53,7 +53,7 @@ class WheelDisplay extends StatelessWidget {
             },
             child: CustomPaint(
               painter: WheelPainter(
-                labels: List<String>.generate(_segmentCount, (index) {
+                labels: List<String>.generate(segmentCount, (index) {
                   final quiz = segments[index % segments.length];
                   final label = quiz.category?.toUpperCase() ?? 'QUIZ';
                   return _formatLabel(label);

@@ -11,6 +11,8 @@ import '../widgets/header.dart';
 import '../providers/player_progress_provider.dart';
 import '../providers/storage_providers.dart';
 
+import 'login_screen.dart';
+
 class WebScreen extends ConsumerStatefulWidget {
   final String title;
   final String link;
@@ -48,12 +50,8 @@ class _WebScreenState extends ConsumerState<WebScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prefsAsync = ref.watch(sharedPreferencesProvider);
+    final profileAsync = ref.watch(activeProfileProvider);
     final progressAsync = ref.watch(playerProgressProvider);
-
-    final prefs = prefsAsync.valueOrNull;
-    final userName = prefs?.getString('userName') ?? 'Explorer';
-    final avatarIndex = prefs?.getInt('profileAvatar') ?? 0;
 
     return Stack(
       fit: StackFit.expand,
@@ -68,50 +66,66 @@ class _WebScreenState extends ConsumerState<WebScreen> {
         Scaffold(
           backgroundColor: Colors.transparent,
           body: progressAsync.when(
-            data: (progress) {
-              return Column(
-                children: [
-                  ProfileHeader(
-                    userName: userName,
-                    avatarIndex: avatarIndex,
-                    progress: progress,
-                    onStatsTap: () => Navigator.of(context).pop(),
-                  ),
+            data: (progress) => profileAsync.when(
+              data: (profile) {
+                if (profile == null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!context.mounted) return;
+                    Navigator.of(
+                      context,
+                    ).pushReplacementNamed(LoginScreen.routeName);
+                  });
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  const SizedBox(height: 32),
+                return Column(
+                  children: [
+                    ProfileHeader(
+                      userName: profile.name,
+                      avatarIndex: profile.avatarIndex,
+                      progress: progress,
+                      onStatsTap: () => Navigator.of(context).pop(),
+                    ),
 
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                        child: Stack(
-                          children: [
-                            if (_ctrl != null)
-                              WebViewWidget(controller: _ctrl!)
-                            else
-                              const Center(child: CircularProgressIndicator()),
+                    const SizedBox(height: 32),
 
-                            if (_loading)
-                              const Positioned.fill(
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                          child: Stack(
+                            children: [
+                              if (_ctrl != null)
+                                WebViewWidget(controller: _ctrl!)
+                              else
+                                const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+
+                              if (_loading)
+                                const Positioned.fill(
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => _ErrorState(message: e.toString()),
+            ),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => _ErrorState(message: e.toString()),
           ),
