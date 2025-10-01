@@ -45,10 +45,10 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   QuizQuestion? _pendingQuestion;
   bool _isRedirecting = false;
 
-  static const int _segmentCount = 12;
+  static const int _segmentCount = 8;
 
   @override
-  void initState() {
+  void initState() {                              
     super.initState();
     _controller =
         AnimationController(
