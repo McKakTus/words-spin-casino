@@ -12,11 +12,11 @@ import 'screens/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: QuizSpinCasinoApp()));
+  runApp(const ProviderScope(child: WordsSpinCasinoApp()));
 }
 
-class QuizSpinCasinoApp extends StatelessWidget {
-  const QuizSpinCasinoApp({super.key});
+class WordsSpinCasinoApp extends StatelessWidget {
+  const WordsSpinCasinoApp({super.key});
 
   @override
   Widget build(BuildContext context) {

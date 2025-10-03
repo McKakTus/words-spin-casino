@@ -1,4 +1,4 @@
-# quizspincasino
+# wordsspincasino
 
 A new Flutter project.
 
