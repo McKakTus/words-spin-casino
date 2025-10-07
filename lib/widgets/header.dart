@@ -96,6 +96,8 @@ class ProfileHeader extends StatelessWidget {
                       children: [
                         Text(
                           userName.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 26,
                             height: 1,

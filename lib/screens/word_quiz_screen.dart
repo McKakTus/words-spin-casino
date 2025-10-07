@@ -1288,13 +1288,13 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     final length = _stage.answer.length;
     switch (difficulty.toLowerCase()) {
       case 'expert':
-        return (20 + length * 2).clamp(15, 75);
+        return (20 + length * 2).clamp(15, 75).toInt();
       case 'hard':
-        return (25 + length * 2).clamp(20, 90);
+        return (25 + length * 2).clamp(20, 90).toInt();
       case 'medium':
-        return (35 + length * 2).clamp(25, 100);
+        return (35 + length * 2).clamp(25, 100).toInt();
       default:
-        return (45 + length * 2).clamp(30, 120);
+        return (45 + length * 2).clamp(30, 120).toInt();
     }
   }
 

@@ -149,15 +149,15 @@ class _StatsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalWords = words.length;
-    final completedWords = progress.completedWordIds.length.clamp(
+    final int totalWords = words.length;
+    final int completedWords = progress.completedWordIds.length.clamp(
       0,
       totalWords,
-    );
-    final remainingWords = (totalWords - completedWords).clamp(
+    ).toInt();
+    final int remainingWords = (totalWords - completedWords).clamp(
       0,
       totalWords,
-    );
+    ).toInt();
     final completionRate = totalWords == 0 ? 0.0 : completedWords / totalWords;
 
     final wordMap = {
@@ -372,7 +372,9 @@ class _StatsContent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                onPressed: onResetPressed,
+                onPressed: () async {
+                  await onResetPressed();
+               },
                 icon: const Icon(Icons.refresh_rounded, color: Color(0xFFFFAF28), size: 20),
                 label: const Text(
                   'Reset Progress',
