@@ -262,7 +262,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     vertical: 20,
                                   ),
                                   textStyle: const TextStyle(
-                                    fontFamily: 'MightySouly',
+                                    fontFamily: 'Cookies',
                                     fontSize: 24,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -309,7 +309,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     vertical: 20,
                                   ),
                                   textStyle: const TextStyle(
-                                    fontFamily: 'MightySouly',
+                                    fontFamily: 'Cookies',
                                     fontSize: 24,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -347,7 +347,7 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     vertical: 20,
                                   ),
                                   textStyle: const TextStyle(
-                                    fontFamily: 'MightySouly',
+                                    fontFamily: 'Cookies',
                                     fontSize: 24,
                                   ),
                                   shape: RoundedRectangleBorder(

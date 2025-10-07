@@ -135,7 +135,7 @@ class MenuButton extends StatelessWidget {
             backgroundColor: const Color(0xFFffaf28),
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 18),
-            textStyle: const TextStyle(fontFamily: 'MightySouly', fontSize: 24),
+            textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),

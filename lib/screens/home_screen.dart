@@ -6,6 +6,7 @@ import '../helpers/image_paths.dart';
 import 'spin_screen.dart';
 import 'stats_screen.dart';
 import 'settings_screen.dart';
+import 'boost_shop_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,12 +32,22 @@ class HomeScreen extends StatelessWidget {
               children: [
                 // Logo
                 const Spacer(),
-                
+
                 SizedBox(
                   width: 200,
                   child: Image.asset(Images.logo),
                 ),
-              
+                const SizedBox(height: 18),
+                const Text(
+                  'Spin the wheel, solve the word, earn the rewards.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    height: 1.3,
+                  ),
+                ),
+
                 const Spacer(),
 
                 Padding(
@@ -44,13 +55,19 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       MenuButton(
-                        text: 'Spin Wheel',
-                        onPressed: () => Navigator.of(context).pushNamed(SpinScreen.routeName),
+                        text: 'Spin Word Wheel',
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed(SpinScreen.routeName),
                       ),
                       const SizedBox(height: 20),
                       MenuButton(
                         text: 'Settings',
                         onPressed: () => Navigator.of(context).pushNamed(SettingsScreen.routeName),
+                      ),
+                      const SizedBox(height: 20),
+                      MenuButton(
+                        text: 'Boost Shop',
+                        onPressed: () => Navigator.of(context).pushNamed(BoostShopScreen.routeName),
                       ),
                       const SizedBox(height: 20),
                       MenuButton(
@@ -98,11 +115,9 @@ class MenuButton extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: Color(0xFF141414),
             foregroundColor: Color(0xFFffaf28),
-            // backgroundColor: const Color(0xFFffaf28),
-            // foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 18),
             textStyle: const TextStyle(
-              fontFamily: 'MightySouly',
+              fontFamily: 'Cookies',
               fontSize: 24,
             ),
             shape: RoundedRectangleBorder(

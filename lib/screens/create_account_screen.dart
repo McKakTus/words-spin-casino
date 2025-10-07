@@ -275,7 +275,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                             vertical: 20,
                                           ),
                                           textStyle: const TextStyle(
-                                            fontFamily: 'MightySouly',
+                                            fontFamily: 'Cookies',
                                             fontSize: 24,
                                             letterSpacing: 0,
                                           ),

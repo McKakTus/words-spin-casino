@@ -51,8 +51,14 @@ const _kProfileAvatarPrefix = 'profile_avatar_';
 const _kActiveProfileKey = 'active_profile';
 
 const xpKeyBase = 'playerXp';
-const coinsKeyBase = 'playerCoins';
-const usedQuestionsKeyBase = 'usedQuestions';
+const coinsKeyBase = 'playerCoins'; // Legacy key kept for migration.
+const usedWordsKeyBase = 'usedWords';
+const usedQuestionsKeyBase = 'usedQuestions'; // Legacy key kept for migration.
+const chipsKeyBase = 'playerChips';
+const currentBetKeyBase = 'playerCurrentBet';
+const streakKeyBase = 'playerWinStreak';
+const jackpotKeyBase = 'playerJackpotProgress';
+const boostsKeyBase = 'playerBoostInventory';
 
 String composeProfileKey(String base, String profileId) => '${base}_$profileId';
 
@@ -87,6 +93,12 @@ Future<void> deleteProfile(SharedPreferences prefs, String profileId) async {
   await prefs.remove('$_kProfileAvatarPrefix$profileId');
   await prefs.remove(composeProfileKey(xpKeyBase, profileId));
   await prefs.remove(composeProfileKey(coinsKeyBase, profileId));
+  await prefs.remove(composeProfileKey(chipsKeyBase, profileId));
+  await prefs.remove(composeProfileKey(currentBetKeyBase, profileId));
+  await prefs.remove(composeProfileKey(streakKeyBase, profileId));
+  await prefs.remove(composeProfileKey(jackpotKeyBase, profileId));
+  await prefs.remove(composeProfileKey(boostsKeyBase, profileId));
+  await prefs.remove(composeProfileKey(usedWordsKeyBase, profileId));
   await prefs.remove(composeProfileKey(usedQuestionsKeyBase, profileId));
   final active = prefs.getString(_kActiveProfileKey);
   if (active == profileId) {

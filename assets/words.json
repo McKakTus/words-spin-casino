@@ -1,0 +1,122 @@
+[
+  {
+    "id": "w1",
+    "answer": "STAR",
+    "category": "Astronomy",
+    "difficulty": "easy",
+    "hint": "Shines in the night sky",
+    "extraLetters": ["L", "E", "K"]
+  },
+  {
+    "id": "w2",
+    "answer": "BRIDGE",
+    "category": "Architecture",
+    "difficulty": "medium",
+    "hint": "Helps you cross a river",
+    "extraLetters": ["T", "O", "L"]
+  },
+  {
+    "id": "w3",
+    "answer": "PYTHON",
+    "category": "Technology",
+    "difficulty": "medium",
+    "hint": "Popular programming language",
+    "extraLetters": ["A", "E", "R"]
+  },
+  {
+    "id": "w4",
+    "answer": "JUNGLE",
+    "category": "Nature",
+    "difficulty": "hard",
+    "hint": "Dense tropical forest",
+    "extraLetters": ["O", "R", "T"]
+  },
+  {
+    "id": "w5",
+    "answer": "PIZZA",
+    "category": "Food",
+    "difficulty": "easy",
+    "hint": "Cheesy slice",
+    "extraLetters": ["S", "R", "T"]
+  },
+  {
+    "id": "w6",
+    "answer": "ORBIT",
+    "category": "Astronomy",
+    "difficulty": "medium",
+    "hint": "A planet follows this path",
+    "extraLetters": ["A", "L", "N"]
+  },
+  {
+    "id": "w7",
+    "answer": "QUARTZ",
+    "category": "Minerals",
+    "difficulty": "hard",
+    "hint": "Crystalline mineral often in watches",
+    "extraLetters": ["E", "L", "N"]
+  },
+  {
+    "id": "w8",
+    "answer": "MELODY",
+    "category": "Music",
+    "difficulty": "easy",
+    "hint": "A tune you can hum",
+    "extraLetters": ["R", "S", "T"]
+  },
+  {
+    "id": "w9",
+    "answer": "SCARF",
+    "category": "Fashion",
+    "difficulty": "easy",
+    "hint": "Keeps your neck warm",
+    "extraLetters": ["L", "H", "O"]
+  },
+  {
+    "id": "w10",
+    "answer": "ATLANTIS",
+    "category": "Mythology",
+    "difficulty": "hard",
+    "hint": "Legendary lost city",
+    "extraLetters": ["E", "R", "O"]
+  },
+  {
+    "id": "w11",
+    "answer": "BINARY",
+    "category": "Technology",
+    "difficulty": "medium",
+    "hint": "Two-digit number system",
+    "extraLetters": ["E", "O", "S"]
+  },
+  {
+    "id": "w12",
+    "answer": "LOTUS",
+    "category": "Nature",
+    "difficulty": "easy",
+    "hint": "Floating flower",
+    "extraLetters": ["A", "E", "R"]
+  },
+  {
+    "id": "w13",
+    "answer": "GALAXY",
+    "category": "Astronomy",
+    "difficulty": "hard",
+    "hint": "Massive collection of stars",
+    "extraLetters": ["E", "R", "T"]
+  },
+  {
+    "id": "w14",
+    "answer": "POETRY",
+    "category": "Art",
+    "difficulty": "medium",
+    "hint": "Words arranged with rhythm",
+    "extraLetters": ["A", "S", "L"]
+  },
+  {
+    "id": "w15",
+    "answer": "LUNAR",
+    "category": "Astronomy",
+    "difficulty": "easy",
+    "hint": "Relating to the moon",
+    "extraLetters": ["E", "S", "T"]
+  }
+]
