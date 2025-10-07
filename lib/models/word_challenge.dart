@@ -93,8 +93,12 @@ class WordChallenge {
       throw ArgumentError('Word challenge at index $index is missing an answer');
     }
 
+    final rawId = json['id'] as String?;
+    final parsedId =
+        (rawId == null || rawId.trim().isEmpty) ? 'w$index' : rawId.trim();
+
     return WordChallenge(
-      id: json['id'] as String? ?? 'w$index',
+      id: parsedId,
       answer: rawAnswer,
       category: json['category'] as String? ?? 'Word',
       difficulty: json['difficulty'] as String?,
