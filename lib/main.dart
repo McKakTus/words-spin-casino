@@ -6,6 +6,7 @@ import 'screens/create_account_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/spin_screen.dart';
+import 'screens/boost_shop_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
@@ -26,16 +27,16 @@ class WordsSpinCasinoApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'Quiz Spin Casino',
+      title: 'Words Spin Casino',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'MightySouly',
+        fontFamily: 'Cookies',
         useMaterial3: true,
         colorScheme: colorScheme,
         scaffoldBackgroundColor: const Color(0xFF111111),
         textTheme: const TextTheme(
-          displaySmall: TextStyle(fontFamily: 'MightySouly', letterSpacing: 1.1),
-          headlineSmall: TextStyle(fontFamily: 'MightySouly', letterSpacing: 1.05),
+          displaySmall: TextStyle(fontFamily: 'Cookies', letterSpacing: 1.1),
+          headlineSmall: TextStyle(fontFamily: 'Cookies', letterSpacing: 1.05),
         ),
         appBarTheme: AppBarTheme(
           backgroundColor: colorScheme.surface,
@@ -61,6 +62,7 @@ class WordsSpinCasinoApp extends StatelessWidget {
         StatsScreen.routeName: (_) => const StatsScreen(),
         SettingsScreen.routeName: (_) => const SettingsScreen(),
         ProfileScreen.routeName: (context) => const ProfileScreen(),
+        BoostShopScreen.routeName: (_) => const BoostShopScreen(),
       },
     );
   }

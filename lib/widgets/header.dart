@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../helpers/image_paths.dart';
+import '../helpers/xp_utils.dart';
 import '../models/player_progress.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -84,53 +85,89 @@ class ProfileHeader extends StatelessWidget {
 
           // Username + level
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
+            child: Builder(
+              builder: (context) {
+                final levelInfo = LevelProgressInfo.from(progress);
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      userName.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 26,
-                        height: 1,
-                        foreground: Paint()
-                          ..style = PaintingStyle.stroke
-                          ..strokeWidth = 4
-                          ..color = const Color(0xFFE2B400),
-                      ),
+                    Stack(
+                      children: [
+                        Text(
+                          userName.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 26,
+                            height: 1,
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 4
+                              ..color = const Color(0xFFE2B400),
+                          ),
+                        ),
+                        Text(
+                          userName.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 26,
+                            height: 1,
+                            color: const Color(0xFF000000),
+                            shadows: [
+                              Shadow(
+                                color: const Color(0xFFF6D736),
+                                blurRadius: 2,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      userName.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        height: 1,
-                        color: const Color(0xFF000000),
-                        shadows: [
-                          Shadow(
-                            color: const Color(0xFFF6D736),
-                            blurRadius: 2,
-                            offset: Offset(0, 2),
+                    const SizedBox(height: 2),
+                    FractionallySizedBox(
+                      widthFactor: 0.8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                progress.levelLabel,
+                                style: const TextStyle(
+                                  color: Color(0xFF232522),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                '${progress.xp} XP',
+                                style: const TextStyle(
+                                  color: Color(0xFF232522),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: levelInfo.progressRatio,
+                              minHeight: 6,
+                              backgroundColor: const Color(0x33232522),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE6B400)),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  progress.levelLabel,
-                  style: const TextStyle(
-                    color: Color(0xFF232522),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
 
@@ -144,9 +181,9 @@ class ProfileHeader extends StatelessWidget {
             child: Row(
               children: [
                 Image.asset(Images.coin, width: 24),
-                const SizedBox(width: 20),
+                const SizedBox(width: 10),
                 Text(
-                  progress.coins.toString(),
+                  progress.chips.toString(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

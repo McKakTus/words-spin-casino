@@ -190,7 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(vertical: 20),
                               textStyle: const TextStyle(
-                                fontFamily: 'MightySouly',
+                                fontFamily: 'Cookies',
                                 fontSize: 24,
                               ),
                               shape: RoundedRectangleBorder(

@@ -79,7 +79,7 @@ class WheelPainter extends CustomPainter {
         style: const TextStyle(
           color: Color(0xFFfeb229),
           fontSize: 16,
-          fontFamily: 'MightySouly',
+          fontFamily: 'Cookies',
         ),
       ),
       textAlign: TextAlign.center,

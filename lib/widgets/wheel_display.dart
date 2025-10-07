@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../models/quiz_question.dart';
 import '../helpers/image_paths.dart';
 
 import 'wheel_painter.dart';
@@ -11,25 +10,30 @@ class WheelDisplay extends StatelessWidget {
     required this.controller,
     required this.rotationAnimation,
     required this.currentRotation,
-    required this.segments,
+    required this.labels,
+    this.onSpinPressed,
+    this.enabled = true,
   });
 
   final AnimationController controller;
   final Animation<double>? rotationAnimation;
   final double currentRotation;
-  final List<QuizQuestion> segments;
+  final List<String> labels;
+  final VoidCallback? onSpinPressed;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    if (segments.isEmpty) {
+    if (labels.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final segmentCount = segments.length;
+    final double size = MediaQuery.of(context).size.width;
+    final segmentCount = labels.length;
 
     return Container(
-      width: 330,
-      height: 330,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: const [
@@ -53,13 +57,12 @@ class WheelDisplay extends StatelessWidget {
             },
             child: CustomPaint(
               painter: WheelPainter(
-                labels: List<String>.generate(segmentCount, (index) {
-                  final quiz = segments[index % segments.length];
-                  final label = quiz.category?.toUpperCase() ?? 'QUIZ';
-                  return _formatLabel(label);
-                }),
+                labels: List<String>.generate(
+                  segmentCount,
+                  (index) => _formatLabel(labels[index % labels.length]),
+                ),
               ),
-              child: const SizedBox(width: 330, height: 330),
+              child: SizedBox(width: size, height: size),
             ),
           ),
 
@@ -79,31 +82,43 @@ class WheelDisplay extends StatelessWidget {
           ),
 
           // Center hub
-          Container(
-            width: 80,
-            height: 80,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const RadialGradient(
-                colors: [
-                  Color(0xFF404040),
-                  Color(0xFF2A2A2A),
-                  Color(0xFF1A1A1A),
-                ],
-              ),
-              border: Border.all(color: const Color(0xFFffaf28), width: 3),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
+          GestureDetector(
+            onTap: enabled ? onSpinPressed : null,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 150),
+              opacity: enabled ? 1 : 0.55,
+              child: Container(
+                width: size * 0.24,
+                height: size * 0.24,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    colors: [
+                      Color(0xFF404040),
+                      Color(0xFF2A2A2A),
+                      Color(0xFF1A1A1A),
+                    ],
+                  ),
+                  border: Border.all(color: const Color(0xFFffaf28), width: 3),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: const Text(
-              'SPIN',
-              style: TextStyle(color: Color(0xFFffaf28), fontSize: 24),
+                child: Text(
+                  'SPIN',
+                  style: TextStyle(
+                    color: const Color(0xFFffaf28),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -112,7 +127,7 @@ class WheelDisplay extends StatelessWidget {
   }
 
   static String _formatLabel(String text) {
-    const int limit = 14;
+    const int limit = 10;
     final sanitized = text.replaceAll('\n', ' ').trim();
     if (sanitized.length <= limit) {
       return sanitized;

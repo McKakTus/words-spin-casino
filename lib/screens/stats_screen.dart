@@ -3,19 +3,23 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../helpers/boost_catalog.dart';
 import '../helpers/image_paths.dart';
 
 import '../widgets/header.dart';
 
 import '../models/player_progress.dart';
-import '../models/quiz_question.dart';
+import '../models/word_challenge.dart';
 
 import '../providers/player_progress_provider.dart';
-import '../providers/quiz_providers.dart';
+import '../providers/word_providers.dart';
 import '../providers/storage_providers.dart';
 
+import 'boost_shop_screen.dart';
 import 'create_account_screen.dart';
 import 'login_screen.dart';
+
+const int _kInitialChipBaseline = 250;
 
 class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
@@ -32,7 +36,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(activeProfileProvider);
-    final questionsAsync = ref.watch(quizQuestionsProvider);
+    final wordsAsync = ref.watch(wordChallengesProvider);
     final progressAsync = ref.watch(playerProgressProvider);
 
     return Stack(
@@ -64,12 +68,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                           );
                         }
 
-                        return questionsAsync.when(
+                        return wordsAsync.when(
                           loading: () =>
                               const Center(child: CircularProgressIndicator()),
                           error: (e, _) =>
                               _ErrorState(message: e.toString()),
-                          data: (List<QuizQuestion> questions) {
+                          data: (List<WordChallenge> words) {
                             return Column(
                               children: [
                                 ProfileHeader(
@@ -84,7 +88,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                                     userName: profile.name,
                                     avatarIndex: profile.avatarIndex,
                                     progress: progress,
-                                    questions: questions,
+                                    words: words,
                                     onResetPressed: () =>
                                         _handleReset(context, ref),
                                   ),
@@ -130,14 +134,14 @@ class _StatsContent extends StatelessWidget {
     required this.userName,
     required this.avatarIndex,
     required this.progress,
-    required this.questions,
+    required this.words,
     required this.onResetPressed,
   });
 
   final String userName;
   final int avatarIndex;
   final PlayerProgress progress;
-  final List<QuizQuestion> questions;
+  final List<WordChallenge> words;
   final Future<void> Function() onResetPressed;
 
   static const Color _accent = Color(0xFFFFAF28);
@@ -145,58 +149,58 @@ class _StatsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalQuizzes = questions.length;
-    final completedQuizzes = progress.usedQuestionIds.length.clamp(
+    final totalWords = words.length;
+    final completedWords = progress.completedWordIds.length.clamp(
       0,
-      totalQuizzes,
+      totalWords,
     );
-    final remainingQuizzes = (totalQuizzes - completedQuizzes).clamp(
+    final remainingWords = (totalWords - completedWords).clamp(
       0,
-      totalQuizzes,
+      totalWords,
     );
-    final completionRate = totalQuizzes == 0
-        ? 0.0
-        : completedQuizzes / totalQuizzes;
+    final completionRate = totalWords == 0 ? 0.0 : completedWords / totalWords;
 
-    final questionMap = {
-      for (final question in questions) question.id: question,
+    final wordMap = {
+      for (final word in words) word.id: word,
     };
 
-    final completedCategories = progress.usedQuestionIds
-        .map((id) => questionMap[id]?.category?.trim())
+    final completedCategories = progress.completedWordIds
+        .map((id) => wordMap[id]?.category.trim())
         .whereType<String>()
         .where((category) => category.isNotEmpty)
         .toSet();
 
-    final totalCategories = questions
-        .map((question) => question.category?.trim())
+    final totalCategories = words
+        .map((word) => word.category.trim())
         .whereType<String>()
         .where((category) => category.isNotEmpty)
         .toSet()
         .length;
 
-    final averageXp = completedQuizzes == 0
+    final averageXp = completedWords == 0
         ? 0
-        : (progress.xp / completedQuizzes).floor();
+        : (progress.xp / completedWords).floor();
+    final totalBoosts =
+        progress.boostInventory.values.fold<int>(0, (sum, value) => sum + value);
+    final int activeStreak = progress.streak;
 
-    final xpInfo = _XpInfo.fromProgress(progress);
     final achievements = _buildAchievements(
-      completedQuizzes: completedQuizzes,
+      completedWords: completedWords,
       completedCategories: completedCategories.length,
       xp: progress.xp,
-      coins: progress.coins,
+      chips: progress.chips,
     );
 
     final stats = [
       _StatMetric(
-        label: 'Quizzes Done',
-        value: completedQuizzes.toString(),
+        label: 'Words Solved',
+        value: completedWords.toString(),
         icon: Icons.check_circle_outline,
         accent: const Color(0xFF00F5A0),
       ),
       _StatMetric(
         label: 'Remaining',
-        value: remainingQuizzes.toString(),
+        value: remainingWords.toString(),
         icon: Icons.lock_clock,
         accent: const Color(0xFF4C6FFF),
       ),
@@ -207,8 +211,8 @@ class _StatsContent extends StatelessWidget {
         accent: _accent,
       ),
       _StatMetric(
-        label: 'Coins Collected',
-        value: progress.coins.toString(),
+        label: 'Chips Banked',
+        value: progress.chips.toString(),
         icon: Icons.savings_outlined,
         accent: const Color(0xFFFF6FB5),
       ),
@@ -219,10 +223,22 @@ class _StatsContent extends StatelessWidget {
         accent: const Color(0xFF00BBF9),
       ),
       _StatMetric(
-        label: 'Avg XP / Quiz',
+        label: 'Avg XP / Word',
         value: averageXp.toString(),
         icon: Icons.trending_up_rounded,
         accent: const Color(0xFF9DFF3B),
+      ),
+      _StatMetric(
+        label: 'Active Streak',
+        value: activeStreak.toString(),
+        icon: Icons.local_fire_department,
+        accent: const Color(0xFFFF8A65),
+      ),
+      _StatMetric(
+        label: 'Boosts Owned',
+        value: totalBoosts.toString(),
+        icon: Icons.bolt_rounded,
+        accent: const Color(0xFFFFAF28),
       ),
     ];
 
@@ -231,15 +247,10 @@ class _StatsContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryCard(
-            userName: userName,
-            avatarIndex: avatarIndex,
-            progress: progress,
-            xpInfo: xpInfo,
-          ),
+          _JackpotProgressSection(progress: progress.jackpotProgress),
           const SizedBox(height: 28),
           Text(
-            'Progress Overview',
+            'Word Progress',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontSize: 18,
@@ -289,14 +300,19 @@ class _StatsContent extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     _ProgressChip(
-                      label: 'Total quizzes',
-                      value: totalQuizzes.toString(),
+                      label: 'Total words',
+                      value: totalWords.toString(),
                       icon: Icons.playlist_add_check_rounded,
                     ),
                     _ProgressChip(
                       label: 'Completed',
-                      value: completedQuizzes.toString(),
+                      value: completedWords.toString(),
                       icon: Icons.bolt_rounded,
+                    ),
+                    _ProgressChip(
+                      label: 'Remaining',
+                      value: remainingWords.toString(),
+                      icon: Icons.flag_outlined,
                     ),
                   ],
                 ),
@@ -305,7 +321,7 @@ class _StatsContent extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           Text(
-            'Key Stats',
+            'Key Word Stats',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontSize: 18,
@@ -315,8 +331,14 @@ class _StatsContent extends StatelessWidget {
           const SizedBox(height: 12),
           _StatsGrid(stats: stats),
           const SizedBox(height: 28),
+          _BoostInventorySection(
+            inventory: progress.boostInventory,
+            onShopTap: () =>
+                Navigator.of(context).pushNamed(BoostShopScreen.routeName),
+          ),
+          const SizedBox(height: 28),
           Text(
-            'Achievements',
+            'Word Achievements',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontSize: 18,
@@ -371,46 +393,46 @@ class _StatsContent extends StatelessWidget {
   }
 
   List<_AchievementData> _buildAchievements({
-    required int completedQuizzes,
+    required int completedWords,
     required int completedCategories,
     required int xp,
-    required int coins,
+    required int chips,
   }) {
     return [
       _AchievementData(
         title: 'First Spin',
-        description: 'Complete your first quiz',
+        description: 'Solve your first word',
         icon: Icons.auto_awesome_rounded,
         accent: const Color(0xFFFFF066),
-        unlocked: completedQuizzes >= 1,
+        unlocked: completedWords >= 1,
       ),
       _AchievementData(
-        title: 'Quiz Explorer',
-        description: 'Finish 5 quizzes',
+        title: 'Word Explorer',
+        description: 'Solve 10 words',
         icon: Icons.travel_explore_rounded,
         accent: const Color(0xFF4ADE80),
-        unlocked: completedQuizzes >= 5,
+        unlocked: completedWords >= 10,
       ),
       _AchievementData(
         title: 'Category Collector',
-        description: 'Master 3 categories',
+        description: 'Master 5 categories',
         icon: Icons.grid_view_rounded,
         accent: const Color(0xFF00BBF9),
-        unlocked: completedCategories >= 3,
+        unlocked: completedCategories >= 5,
       ),
       _AchievementData(
         title: 'Rising Star',
-        description: 'Earn 250 XP overall',
+        description: 'Earn 800 XP overall',
         icon: Icons.stacked_line_chart_rounded,
         accent: const Color(0xFFFF6FB5),
-        unlocked: xp >= 250,
+        unlocked: xp >= 800,
       ),
       _AchievementData(
-        title: 'Savings Booster',
-        description: 'Collect 100 coins',
+        title: 'Savings Stash',
+        description: 'Save up 750 chips',
         icon: Icons.savings_rounded,
         accent: const Color(0xFFFFAF28),
-        unlocked: coins >= 100,
+        unlocked: chips >= _kInitialChipBaseline + 500,
       ),
     ];
   }
@@ -430,7 +452,7 @@ Future<void> _handleReset(BuildContext context, WidgetRef ref) async {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
           ),
           content: const Text(
-            'This clears learned quizzes, XP, and coins. Ready to start fresh?',
+            'This clears solved words, XP, and chips. Ready to start fresh?',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -458,102 +480,196 @@ Future<void> _handleReset(BuildContext context, WidgetRef ref) async {
 
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(
-      content: Text('Progress reset. Spin the wheel for a fresh start!'),
+      content: Text('Progress reset. Spin the wheel for fresh words!'),
     ),
   );
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.userName,
-    required this.avatarIndex,
-    required this.progress,
-    required this.xpInfo,
-  });
+class _JackpotProgressSection extends StatelessWidget {
+  const _JackpotProgressSection({required this.progress});
 
-  final String userName;
-  final int avatarIndex;
-  final PlayerProgress progress;
-  final _XpInfo xpInfo;
-
-  static const Color _accent = Color(0xFFFFAF28);
+  final int progress;
 
   @override
   Widget build(BuildContext context) {
+    final double normalized = (progress.clamp(0, 100)) / 100.0;
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFffbc2f), Color(0xFFfeb229)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: const Border(
-          bottom: BorderSide(color: Color(0xFFe58923), width: 3),
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 10,
-            offset: Offset(0, 6),
+      padding: const EdgeInsets.all(20),
+      decoration: _glassDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.casino, color: Color(0xFFFFAF28)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Jackpot Progress',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ) ??
+                      const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '${progress.clamp(0, 100)}%',
+                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: LinearProgressIndicator(
+              value: normalized,
+              minHeight: 14,
+              backgroundColor: Colors.white12,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFAF28)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Fill the meter by winning spins. Reaching 100% drops bonus chips and boosts.',
+            style: TextStyle(color: Colors.white60, fontSize: 12),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BoostInventorySection extends StatelessWidget {
+  const _BoostInventorySection({
+    required this.inventory,
+    required this.onShopTap,
+  });
+
+  final Map<BoostType, int> inventory;
+  final VoidCallback onShopTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final boostTiles = BoostCatalog.all()
+        .map((info) => _BoostInventoryTile(
+              info: info,
+              count: inventory[info.type] ?? 0,
+            ))
+        .toList(growable: false);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: _glassDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bolt_rounded, color: Colors.white70, size: 22),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Boost Inventory',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: onShopTap,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFAF28),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: const Icon(Icons.storefront_rounded, size: 18),
+                label: const Text(
+                  'Open Shop',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: boostTiles,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BoostInventoryTile extends StatelessWidget {
+  const _BoostInventoryTile({required this.info, required this.count});
+
+  final BoostInfo info;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = info.accent;
+    return Container(
+      width: MediaQuery.sizeOf(context).width / 2 - 28,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1C),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withAlpha(77)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: accent.withAlpha(34),
+                ),
+                child: Icon(info.icon, color: accent, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  info.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            info.description,
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+          const SizedBox(height: 14),
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withAlpha(20),
-              borderRadius: BorderRadius.circular(20),
+              color: accent.withAlpha(26),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Level Progress',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      xpInfo.nextLevelXp != null
-                          ? '${xpInfo.xpIntoLevel}/${xpInfo.nextLevelXp! - xpInfo.baseXp} XP'
-                          : '${progress.xp} XP',
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: LinearProgressIndicator(
-                    value: xpInfo.progressRatio,
-                    minHeight: 12,
-                    backgroundColor: Colors.black26,
-                    valueColor: const AlwaysStoppedAnimation<Color>(_accent),
-                  ),
-                ),
-                if (xpInfo.nextLevelXp != null) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    '${xpInfo.xpToNextLevel} XP to ${xpInfo.nextLevelLabel}',
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              'Owned: $count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -769,93 +885,7 @@ class _StatMetric {
   final Color accent;
 }
 
-class _XpInfo {
-  const _XpInfo({
-    required this.currentLevel,
-    required this.baseXp,
-    required this.nextLevelXp,
-    required this.progressRatio,
-    required this.xpIntoLevel,
-    required this.xpToNextLevel,
-    required this.nextLevelLabel,
-  });
 
-  final PlayerLevel currentLevel;
-  final int baseXp;
-  final int? nextLevelXp;
-  final double progressRatio;
-  final int xpIntoLevel;
-  final int? xpToNextLevel;
-  final String nextLevelLabel;
-
-  static _XpInfo fromProgress(PlayerProgress progress) {
-    final level = progress.level;
-    final base = _baseXpFor(level);
-    final next = _nextXpFor(level);
-    final xpIntoLevel = progress.xp - base;
-    final xpSpan = next != null ? (next - base) : null;
-    final ratio = xpSpan == null || xpSpan == 0
-        ? 1.0
-        : (xpIntoLevel / xpSpan).clamp(0.0, 1.0);
-
-    final xpToNext = next != null ? (next - progress.xp).clamp(0, next) : null;
-
-    return _XpInfo(
-      currentLevel: level,
-      baseXp: base,
-      nextLevelXp: next,
-      progressRatio: ratio,
-      xpIntoLevel: xpIntoLevel,
-      xpToNextLevel: xpToNext,
-      nextLevelLabel: _labelForNext(level),
-    );
-  }
-
-  static int _baseXpFor(PlayerLevel level) {
-    switch (level) {
-      case PlayerLevel.beginner:
-        return 0;
-      case PlayerLevel.learner:
-        return 50;
-      case PlayerLevel.intermediate:
-        return 150;
-      case PlayerLevel.advanced:
-        return 300;
-      case PlayerLevel.pro:
-        return 500;
-    }
-  }
-
-  static int? _nextXpFor(PlayerLevel level) {
-    switch (level) {
-      case PlayerLevel.beginner:
-        return 50;
-      case PlayerLevel.learner:
-        return 150;
-      case PlayerLevel.intermediate:
-        return 300;
-      case PlayerLevel.advanced:
-        return 500;
-      case PlayerLevel.pro:
-        return null;
-    }
-  }
-
-  static String _labelForNext(PlayerLevel level) {
-    switch (level) {
-      case PlayerLevel.beginner:
-        return 'Learner';
-      case PlayerLevel.learner:
-        return 'Intermediate';
-      case PlayerLevel.intermediate:
-        return 'Advanced';
-      case PlayerLevel.advanced:
-        return 'Pro';
-      case PlayerLevel.pro:
-        return 'Legend';
-    }
-  }
-}
 
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message});
