@@ -16,20 +16,33 @@ class WheelPainter extends CustomPainter {
     final baseStart = -math.pi / 2 - segmentAngle / 2;
 
     // Draw segments
+    const purpleSectionGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFF7c158c),
+        Color(0xFFa52ebd),
+        Color(0xFF9337b6),
+      ],
+      stops: [0.0, 0.5, 1.0],
+    );
+
+    const orangeSectionGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFFe74d04),
+        Color(0xFFf99c04),
+        Color(0xFFf67a01),
+      ],
+      stops: [0.0, 0.5, 1.0],
+    );
+
     for (var i = 0; i < labels.length; i++) {
       final startAngle = baseStart + i * segmentAngle;
       
-      // Create a radial gradient from the dark center to the colored edge
-      final gradient = RadialGradient(
-        center: Alignment.center,
-        radius: 1.0,
-        colors: [
-          const Color(0xFF2A2A2A), // Dark center
-          const Color(0xFF1A1A1A), // Middle
-          const Color(0xFFe58923), // Edge
-        ],
-        stops: const [0.0, 0.4, 1],
-      );
+      // Alternate gradients for segments
+      final gradient = (i % 2 == 0) ? purpleSectionGradient : orangeSectionGradient;
 
       final segmentRect = Rect.fromCircle(center: center, radius: radius);
       final gradientPaint = Paint()
@@ -42,8 +55,8 @@ class WheelPainter extends CustomPainter {
       // Draw thick black dividers
       final borderPaint = Paint()
         ..style = PaintingStyle.stroke
-        ..color = Colors.black
-        ..strokeWidth = 6.0;
+        ..color = Color(0xFF9ab1da)
+        ..strokeWidth = 14.0;
       
       canvas.drawArc(segmentRect, startAngle, segmentAngle, true, borderPaint);
 
@@ -77,8 +90,8 @@ class WheelPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: const TextStyle(
-          color: Color(0xFFfeb229),
-          fontSize: 16,
+          color: Color(0xFFFFFFFF),
+          fontSize: 24,
           fontFamily: 'Cookies',
         ),
       ),

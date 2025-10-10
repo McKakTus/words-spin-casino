@@ -1,4 +1,4 @@
-name: wordsspincasino
+name: casinowordsspin
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -64,15 +64,17 @@ flutter:
 
   assets:
     - assets/words.json
-    - assets/images/avatars/
-    - assets/images/sectors/
+    - assets/images/profiles/
+    - assets/images/backgrounds/
+    - assets/images/wheel_outer_ring.png
     - assets/images/logo.png
-    - assets/images/logo_a.png
-    - assets/images/coin.png
+    - assets/images/coins.png
+    - assets/images/xp.png
     - assets/images/arrow.png
-    - assets/images/background.jpg
-    - assets/images/background_a.jpg
-    - assets/images/background_b.jpg
+    - assets/images/bg.png
+    - assets/images/bg_a.png
+    - assets/images/bg_b.png
+    - assets/images/win_confetii.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

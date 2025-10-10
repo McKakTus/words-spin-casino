@@ -4,7 +4,7 @@ import '../models/player_progress.dart';
 import 'storage_providers.dart';
 
 const int _kStartingChips = 250;
-const int _kDefaultBet = 25;
+const int _kDefaultBet = 12;
 const int _kJackpotMax = 100;
 const int _kJackpotChipReward = 200;
 const Map<BoostType, int> _kJackpotBoostRewards = {

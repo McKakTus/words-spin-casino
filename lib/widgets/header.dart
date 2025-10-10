@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../helpers/image_paths.dart';
 import '../helpers/xp_utils.dart';
+import '../widgets/stroke_text.dart';
 import '../models/player_progress.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -11,12 +12,14 @@ class ProfileHeader extends StatelessWidget {
     required this.avatarIndex,
     required this.progress,
     required this.onStatsTap,
+    this.showBackButton = true,
   });
 
   final String userName;
   final int avatarIndex;
   final PlayerProgress progress;
   final VoidCallback onStatsTap;
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +33,12 @@ class ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         border: const Border(
-          bottom: BorderSide(color: Color(0xFFe58923), width: 3),
+          bottom: BorderSide(color: Color(0xFFD8D5EA), width: 5),
         ),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFffbc2f), Color(0xFFfeb229)],
+          colors: [Color(0xFFACA2BF), Color(0xFF968AAB)],
         ),
         boxShadow: const [
           BoxShadow(
@@ -48,14 +51,15 @@ class ProfileHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton.filled(
-            iconSize: 18,
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-            ),
+          if (showBackButton)
+            IconButton.filled(
+              iconSize: 18,
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+              ),
             style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF232522),
+              backgroundColor: const Color(0xFF47356C),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -65,7 +69,7 @@ class ProfileHeader extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
           ),
 
-          const SizedBox(width: 6),
+          if (showBackButton) const SizedBox(width: 6),
 
           // Avatar
           Container(
@@ -73,14 +77,29 @@ class ProfileHeader extends StatelessWidget {
             height: 54,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: Colors.transparent,
+              border: Border.all(color: Colors.white38, width: 2),
+              gradient: const RadialGradient(
+                colors: [
+                  Color(0xFFD8D5EA), 
+                  Color(0xFF978BAC), 
+                ],
+                center: Alignment.center,
+                radius: 0.65, 
+                stops: [0.47, 1.0],
+              ),
+              
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              Images.avatars[avatarIndex % Images.avatars.length],
-              fit: BoxFit.cover,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                Images.profiles[avatarIndex % Images.profiles.length],
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,  
+              ),
             ),
           ),
+
           const SizedBox(width: 10),
 
           // Username + level
@@ -92,40 +111,10 @@ class ProfileHeader extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Stack(
-                      children: [
-                        Text(
-                          userName.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 26,
-                            height: 1,
-                            foreground: Paint()
-                              ..style = PaintingStyle.stroke
-                              ..strokeWidth = 4
-                              ..color = const Color(0xFFE2B400),
-                          ),
-                        ),
-                        Text(
-                          userName.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 26,
-                            height: 1,
-                            color: const Color(0xFF000000),
-                            shadows: [
-                              Shadow(
-                                color: const Color(0xFFF6D736),
-                                blurRadius: 2,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    StrokeText(
+                      text: userName,
+                      strokeColor: Color(0x33232522),
+                      fontSize: 24,
                     ),
                     const SizedBox(height: 2),
                     FractionallySizedBox(
@@ -139,22 +128,22 @@ class ProfileHeader extends StatelessWidget {
                               Text(
                                 progress.levelLabel,
                                 style: const TextStyle(
-                                  color: Color(0xFF232522),
+                                  color: Color(0xFFFFFFFF),
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Cookies',
                                 ),
                               ),
                               Text(
                                 '${progress.xp} XP',
                                 style: const TextStyle(
-                                  color: Color(0xFF232522),
+                                  color: Color(0xCC232522),
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w400,
+                                  fontFamily: 'Cookies',
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(999),
                             child: LinearProgressIndicator(
@@ -177,21 +166,23 @@ class ProfileHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF232522),
+              color: const Color(0xAA1F1039),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset(Images.coin, width: 24),
-                const SizedBox(width: 10),
+                const SizedBox(width: 2),
                 Text(
                   progress.chips.toString(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Cookies',
                     fontSize: 18,
                   ),
                 ),
+                const SizedBox(width: 10),
+                Image.asset(Images.coin, width: 24),
               ],
             ),
           ),

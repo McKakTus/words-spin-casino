@@ -1,17 +1,27 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/boost_catalog.dart';
+import '../helpers/image_paths.dart';
+
+import '../widgets/stroke_text.dart';
+import '../widgets/stroke_icon.dart';
+import '../widgets/primary_button.dart';
+
 import '../models/player_progress.dart';
 import '../models/wheel_segment.dart';
 import '../models/word_challenge.dart';
+
 import '../providers/player_progress_provider.dart';
+
 import 'boost_shop_screen.dart';
 import 'stats_screen.dart';
-enum WordQuizMode { standard, daily }
+
+enum WordQuizMode { standard }
 
 class WordQuizScreen extends ConsumerStatefulWidget {
   const WordQuizScreen({
@@ -19,7 +29,6 @@ class WordQuizScreen extends ConsumerStatefulWidget {
     required this.challenge,
     required this.modifiers,
     this.mode = WordQuizMode.standard,
-    this.totalDailyWords,
     this.segmentId,
     this.bet,
     this.rewardMultiplier = 1.0,
@@ -29,7 +38,6 @@ class WordQuizScreen extends ConsumerStatefulWidget {
   final WordChallenge challenge;
   final List<WheelModifierType> modifiers;
   final WordQuizMode mode;
-  final int? totalDailyWords;
   final WheelSegmentId? segmentId;
   final int? bet;
   final double rewardMultiplier;
@@ -50,6 +58,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   late final List<_StageData> _stages;
   late final int _baseXpReward;
   late final int _baseChipReward;
+  late final String _backgroundAsset;
 
   late List<WordLetterSlot> _currentSlots;
   late List<WordTile> _tiles;
@@ -58,7 +67,8 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   Timer? _errorTimer;
   Timer? _countdownTimer;
   Timer? _burningTimer;
-  Timer? _introTimer;
+  Timer? _preRoundTimer;
+  Timer? _countdownHideTimer;
   Timer? _timeFreezeTimer;
 
   int _stageIndex = 0;
@@ -68,15 +78,17 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   bool _isSubmitting = false;
   bool _completed = false;
   bool _failureProcessed = false;
-  bool _showIntro = true;
   bool _timeFreezeActive = false;
   bool _resumeBurningAfterFreeze = false;
   bool _resumeCountdownAfterPause = false;
   bool _resumeBurningAfterPause = false;
-  bool _resumeIntroAfterPause = false;
+  bool _resumePreRoundAfterPause = false;
   bool _isPaused = false;
   bool _showPauseOverlay = false;
   bool _showBoostsOverlay = false;
+  bool _pausedForBoostOverlay = false;
+  bool _showCountdownOverlay = false;
+  int? _countdownValue;
   bool _swapTilesMode = false;
   String? _swapTileSelection;
   bool _streakShieldActive = false;
@@ -90,11 +102,18 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
 
   int get _totalStages => _stages.length;
   _StageData get _stage => _stages[_stageIndex];
+  bool get _isPreRoundActive => _showCountdownOverlay;
 
   @override
   void initState() {
     super.initState();
     _modifiers = widget.modifiers.toSet();
+    final backgrounds = Images.backgrounds;
+    if (backgrounds.isNotEmpty) {
+      _backgroundAsset = backgrounds[_random.nextInt(backgrounds.length)];
+    } else {
+      _backgroundAsset = Images.background;
+    }
     _initializeStages();
     _baseXpReward = _computeBaseXp(_stage.difficulty, _stage.answer.length);
     _baseChipReward = _computeBaseChips(_stage.difficulty, _stage.answer.length);
@@ -106,7 +125,8 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     _errorTimer?.cancel();
     _countdownTimer?.cancel();
     _burningTimer?.cancel();
-    _introTimer?.cancel();
+    _preRoundTimer?.cancel();
+    _countdownHideTimer?.cancel();
     _timeFreezeTimer?.cancel();
     super.dispose();
   }
@@ -116,9 +136,12 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     final playerProgressAsync = ref.watch(playerProgressProvider);
     final playerProgress = playerProgressAsync.value;
     final statusChips = _statusChips();
+    final bool hasHint = _currentHint != null && _currentHint!.trim().isNotEmpty;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final bool canOpenBoostOverlay = playerProgress != null &&
         !_showBoostsOverlay &&
         !_showPauseOverlay &&
+        !_isPreRoundActive &&
         _pendingReward == null &&
         !_boostActivationInProgress &&
         !_isSubmitting &&
@@ -128,126 +151,126 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     if (playerProgress == null && _showBoostsOverlay) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        setState(() => _showBoostsOverlay = false);
+        _closeBoostsOverlay();
       });
     }
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF050505), Color(0xFF171717)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: const Icon(Icons.pause_circle_filled, size: 28),
-            color: Colors.white,
-            onPressed: _handlePausePressed,
-            tooltip: 'Pause',
-          ),
-          title: Text(
-            widget.challenge.category.toUpperCase(),
-            style: const TextStyle(fontSize: 24),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.bolt_rounded, size: 26),
-              color: Colors.white,
-              tooltip: 'Boosts',
-              onPressed: canOpenBoostOverlay ? _openBoostsOverlay : null,
-            ),
-            const SizedBox(width: 4),
-          ],
-        ),
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (!_showIntro) ...[
-                      _buildTimerBadge(),
-                      if (statusChips.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          alignment: WrapAlignment.center,
-                          children: statusChips,
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      _buildStageIndicator(),
-                      const SizedBox(height: 16),
-                      _buildHintBanner(),
-                    ],
-                    if (_showIntro) const SizedBox(height: 32),
-                    _buildSlotsRow(),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Beat the timer: tap letters to fill slots, tap a slot to clear.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white60, fontSize: 14),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Center(child: _buildTilesGrid()),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildActions(context),
-                  ],
-                ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(_backgroundAsset, fit: BoxFit.cover),
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xCC000000), 
+                  Color(0x66000000), 
+                  Color(0x00000000),
+                ],
+                stops: [0.0, 0.4, 1.0],
               ),
-              if (_showIntro)
-                _IntroOverlay(
-                  onDismiss: _dismissIntro,
-                  child: _IntroPopup(
-                    segment: widget.segmentId,
-                    bet: widget.bet ?? 0,
-                    rewardMultiplier: widget.rewardMultiplier,
-                    penaltyMultiplier: widget.penaltyMultiplier,
-                    modifiers: _modifiers,
-                    xpReward: _rewardedXp,
-                    chipReward: _rewardedChips,
-                  ),
-                ),
-              if (_pendingReward != null)
-                _RewardCelebration(
-                  summary: _pendingReward!,
-                  onDismiss: _dismissReward,
-                ),
-              if (_showBoostsOverlay && playerProgress != null)
-                _BoostsOverlay(
-                  inventory: playerProgress.boostInventory,
-                  onBoostSelected: _activateBoostFromOverlay,
-                  onDismiss: () => setState(() => _showBoostsOverlay = false),
-                  canActivate: (type) => !_boostActivationInProgress && _canActivateBoost(type),
-                  infoBuilder: BoostCatalog.info,
-                ),
-              if (_showPauseOverlay)
-                _PauseOverlay(
-                  onResume: _resumeGame,
-                  onShop: () => _navigateFromPause(BoostShopScreen.routeName),
-                  onStats: () => _navigateFromPause(StatsScreen.routeName),
-                  onEndQuiz: _endQuizEarly,
-                ),
-            ],
+            ),
           ),
         ),
-      ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: PrimaryButton(
+                          label: const StrokeIcon(
+                            icon: Icons.pause_rounded,
+                            size: 22,
+                          ),
+                          onPressed: _handlePausePressed,
+                          borderRadius: 12,
+                          uppercase: false,
+                        ),
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: StrokeText(
+                            text: widget.challenge.category.toUpperCase(),
+                            fontSize: 32,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: PrimaryButton(
+                          label: StrokeIcon(
+                            icon: Icons.bolt_rounded,
+                            size: 22,
+                          ),
+                          borderRadius: 12,
+                          onPressed: canOpenBoostOverlay ? _openBoostsOverlay : null,
+                          enabled: canOpenBoostOverlay,
+                          uppercase: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildOverviewSection(
+                    colorScheme: colorScheme,
+                    statusChips: statusChips,
+                    hasHint: hasHint,
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSlotsSection(colorScheme),
+                  const SizedBox(height: 18),
+                  _buildGuideText(colorScheme),
+                  const SizedBox(height: 18),
+                  _buildTilePanel(colorScheme),
+                  const SizedBox(height: 20),
+                  _buildActions(context, colorScheme),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (_showCountdownOverlay)
+          _CountdownOverlay(
+            value: _countdownValue,
+          ),
+        if (_pendingReward != null)
+          _RewardCelebration(
+            summary: _pendingReward!,
+            onDismiss: _dismissReward,
+            chipRewardImage: Images.coin,
+            xpRewardImage: Images.xp,
+          ),
+        if (_showBoostsOverlay && playerProgress != null)
+          _BoostsOverlay(
+            inventory: playerProgress.boostInventory,
+            onBoostSelected: _activateBoostFromOverlay,
+            onDismiss: () => _closeBoostsOverlay(),
+            canActivate: (type) => !_boostActivationInProgress && _canActivateBoost(type),
+            infoBuilder: BoostCatalog.info,
+          ),
+        if (_showPauseOverlay)
+          _PauseOverlay(
+            onResume: _resumeGame,
+            onShop: () => _navigateFromPause(BoostShopScreen.routeName),
+            onStats: () => _navigateFromPause(StatsScreen.routeName),
+            onEndQuiz: _endQuizEarly,
+          ),
+      ],
     );
   }
 
@@ -277,7 +300,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   }
 
   Future<void> _handleSubmit() async {
-    if (_showIntro) {
+    if (_isPreRoundActive) {
       return;
     }
     if (_hasTimedOut) {
@@ -290,7 +313,6 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     }
 
     setState(() => _isSubmitting = true);
-    _introTimer?.cancel();
     _countdownTimer?.cancel();
     _burningTimer?.cancel();
 
@@ -310,32 +332,6 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
 
     await _finalizeSuccess();
     return;
-  }
-
-  Widget _buildHintBanner() {
-    if (_currentHint == null || _currentHint!.trim().isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1F1F1F),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.lightbulb_outline, color: Color(0xFFF6D736), size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _currentHint!,
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   List<Widget> _statusChips() {
@@ -367,7 +363,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       return;
     }
     if (_showBoostsOverlay) {
-      setState(() => _showBoostsOverlay = false);
+      _closeBoostsOverlay(resume: false);
     }
     if (_showPauseOverlay) {
       _resumeGame();
@@ -383,14 +379,19 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     }
     _resumeCountdownAfterPause = _countdownTimer != null;
     _resumeBurningAfterPause = _burningTimer != null && !_timeFreezeActive;
-    _resumeIntroAfterPause = _showIntro && _introTimer != null;
+    _resumePreRoundAfterPause = _showCountdownOverlay;
 
     _countdownTimer?.cancel();
     _countdownTimer = null;
     _burningTimer?.cancel();
     _burningTimer = null;
-    _introTimer?.cancel();
-    _introTimer = null;
+
+    if (_resumePreRoundAfterPause) {
+      _preRoundTimer?.cancel();
+      _preRoundTimer = null;
+      _countdownHideTimer?.cancel();
+      _countdownHideTimer = null;
+    }
 
     if (_timeFreezeActive) {
       _timeFreezeRemaining = _timeFreezeExpiresAt?.difference(DateTime.now());
@@ -412,12 +413,11 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       return;
     }
     final bool shouldRestartCountdown =
-        _resumeCountdownAfterPause && !_showIntro && !_timeFreezeActive;
+        _resumeCountdownAfterPause && !_isPreRoundActive && !_timeFreezeActive;
     final bool shouldRestartBurning =
         (_resumeBurningAfterPause ||
                 (_resumeBurningAfterFreeze && !_timeFreezeActive)) &&
             _modifiers.contains(WheelModifierType.burningTiles);
-    final bool shouldRestartIntro = _resumeIntroAfterPause && _showIntro;
 
     setState(() {
       _showPauseOverlay = false;
@@ -435,35 +435,57 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       _timeFreezeRemaining = null;
     }
 
-    if (shouldRestartIntro && _introTimer == null) {
-      _introTimer = Timer(const Duration(seconds: 2), () {
-        if (!mounted) return;
-        _dismissIntro();
-      });
-    }
+    if (_resumePreRoundAfterPause) {
+      _resumePreRoundAfterPause = false;
+      if (_countdownValue == null) {
+        _onPreRoundCountdownFinished();
+      } else {
+        _beginPreRoundCountdown(startValue: _countdownValue!);
+      }
+    } else {
+      if (shouldRestartCountdown && _countdownTimer == null) {
+        _startCountdown();
+      }
 
-    if (shouldRestartCountdown && _countdownTimer == null) {
-      _startCountdown();
-    }
-
-    if (shouldRestartBurning && _burningTimer == null) {
-      _startBurningTimer();
+      if (shouldRestartBurning && _burningTimer == null) {
+        _startBurningTimer();
+      }
     }
 
     _resumeCountdownAfterPause = false;
     _resumeBurningAfterPause = false;
-    _resumeIntroAfterPause = false;
   }
 
   void _openBoostsOverlay() {
-    if (_showBoostsOverlay || _showPauseOverlay || _pendingReward != null) {
+    if (_isPreRoundActive ||
+        _showBoostsOverlay ||
+        _showPauseOverlay ||
+        _pendingReward != null) {
       return;
     }
+    final bool wasPaused = _isPaused;
+    if (!wasPaused) {
+      _pauseGame();
+    }
     setState(() => _showBoostsOverlay = true);
+    _pausedForBoostOverlay = !wasPaused;
+  }
+
+  void _closeBoostsOverlay({bool resume = true}) {
+    if (!_showBoostsOverlay) {
+      _pausedForBoostOverlay = false;
+      return;
+    }
+    setState(() => _showBoostsOverlay = false);
+    final bool shouldResume = resume && _pausedForBoostOverlay;
+    _pausedForBoostOverlay = false;
+    if (shouldResume) {
+      _resumeGame();
+    }
   }
 
   void _activateBoostFromOverlay(BoostType type) {
-    setState(() => _showBoostsOverlay = false);
+    _closeBoostsOverlay();
     _handleBoostPressed(type);
   }
 
@@ -496,49 +518,233 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
 
   bool _mountedAndActive() => mounted && !_completed;
 
-  Widget _buildStageIndicator() {
-    if (_totalStages <= 1) return const SizedBox.shrink();
-    return Text(
-      'Stage ${_stageIndex + 1} of $_totalStages',
-      style: const TextStyle(color: Colors.white70, fontSize: 13),
+  Widget _buildOverviewSection({
+    required ColorScheme colorScheme,
+    required List<Widget> statusChips,
+    required bool hasHint,
+  }) {
+    final bool showStatus = !_isPreRoundActive && statusChips.isNotEmpty;
+    final bool showStage = !_isPreRoundActive && _totalStages > 1;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary.withValues(alpha: 0.22),
+            colorScheme.secondary.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 22,
+            offset: Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showStatus) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: statusChips,
+            ),
+          ],
+          if (hasHint) ...[
+            const SizedBox(height: 16),
+            _buildHintBanner(colorScheme),
+          ],
+          const SizedBox(height: 16),
+          if (showStage) ...[
+            _buildStageIndicator(colorScheme),
+            const SizedBox(height: 8),
+          ],
+          _buildTimerBadge(colorScheme),
+        ],
+      ),
     );
   }
 
-  Widget _buildTimerBadge() {
-    if (_showIntro) return const SizedBox.shrink();
+  Widget _buildSlotsSection(ColorScheme colorScheme) {
+    final Color background = Color.alphaBlend(
+      colorScheme.primary.withValues(alpha: 0.08),
+      Colors.black.withValues(alpha: 0.76),
+    );
+    final Color border = colorScheme.primary.withValues(alpha: 0.18);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x55000000),
+            blurRadius: 18,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Center(child: _buildSlotsRow(colorScheme)),
+    );
+  }
+
+  Widget _buildGuideText(ColorScheme colorScheme) {
+    final String message;
+    if (_hasTimedOut) {
+      message = 'Time expired — try again to secure your reward.';
+    } else if (_isPreRoundActive) {
+      message = 'Get ready! Letters unlock when the countdown ends.';
+    } else {
+      message = 'Tap letters to fill each slot. Tap any slot to clear it.';
+    }
+
+    return Text(
+      message,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.72),
+        fontSize: 14,
+        height: 1.35,
+        decoration: TextDecoration.none,
+      ),
+    );
+  }
+
+  Widget _buildTilePanel(ColorScheme colorScheme) {
+    final Color background = Color.alphaBlend(
+      colorScheme.secondary.withValues(alpha: 0.08),
+      Colors.black.withValues(alpha: 0.8),
+    );
+    final Color border = colorScheme.secondary.withValues(alpha: 0.18);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x55000000),
+            blurRadius: 22,
+            offset: Offset(0, 16),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 24),
+      child: Center(child: _buildTilesGrid(colorScheme)),
+    );
+  }
+
+  Widget _buildStageIndicator(ColorScheme colorScheme) {
+    if (_totalStages <= 1) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.secondary.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.secondary.withValues(alpha: 0.45)),
+      ),
+      child: Text(
+        'Stage ${_stageIndex + 1} of $_totalStages',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimerBadge(ColorScheme colorScheme) {
     if (_timeLimitSeconds <= 0) return const SizedBox.shrink();
-    final progress = _timeLimitSeconds == 0
+    final double progress = _timeLimitSeconds == 0
         ? 0.0
         : (_timeRemaining.clamp(0, _timeLimitSeconds)) / _timeLimitSeconds;
-    final Color baseColor = _hasTimedOut
-        ? const Color(0xFFFF6E6E)
-        : progress > 0.5
-            ? const Color(0xFF00F5A0)
-            : progress > 0.25
-                ? const Color(0xFFFFAF28)
-                : const Color(0xFFFF6E6E);
+    final Color progressStart =
+        _hasTimedOut ? const Color(0xFFFF4D6D) : colorScheme.primary;
+    final Color progressEnd =
+        _hasTimedOut ? const Color(0xFFFF8E9D) : colorScheme.secondary;
+    final Color trackColor = Colors.white.withOpacity(0.08);
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         SizedBox(
-          height: 32,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              LinearProgressIndicator(
-                value: _hasTimedOut ? 0 : progress,
-                minHeight: 10,
-                backgroundColor: Colors.white10,
-                valueColor: AlwaysStoppedAnimation<Color>(baseColor),
-              ),
-              Text(
-                _formatTime(_timeRemaining),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          width: double.infinity,
+          height: 14,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double maxWidth = constraints.maxWidth;
+              final double targetWidth =
+                  (_hasTimedOut ? 0 : progress) * maxWidth;
+              final BorderRadius radius = BorderRadius.circular(18);
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: trackColor,
+                      borderRadius: radius,
+                      border: Border.all(color: Colors.white.withOpacity(0.12)),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      width: targetWidth.clamp(0.0, maxWidth),
+                      decoration: BoxDecoration(
+                        borderRadius: radius,
+                        gradient: LinearGradient(
+                          colors: [progressStart, progressEnd],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: progressEnd.withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _formatTime(_timeRemaining),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         if (_hasTimedOut)
@@ -553,7 +759,50 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     );
   }
 
-  Widget _buildSlotsRow() {
+  Widget _buildHintBanner(ColorScheme colorScheme) {
+    final String? hint = _currentHint;
+    if (hint == null || hint.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final Color background = Color.alphaBlend(
+      colorScheme.primary.withOpacity(0.16),
+      Colors.black.withOpacity(0.65),
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.lightbulb_outline_rounded,
+            color: colorScheme.secondary,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              hint,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                height: 1.3,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlotsRow(ColorScheme colorScheme) {
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 12,
@@ -561,6 +810,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       children: _currentSlots
           .map(
             (slot) => _SlotChip(
+              colorScheme: colorScheme,
               isFilled: _filledSlots.containsKey(slot.index),
               letter: _filledSlots[slot.index]?.character,
               isHighlighted: _highlightedSlotIndex == slot.index,
@@ -577,7 +827,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     );
   }
 
-  Widget _buildTilesGrid() {
+  Widget _buildTilesGrid(ColorScheme colorScheme) {
     return Wrap(
       spacing: 14,
       runSpacing: 14,
@@ -600,6 +850,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
                   !_completed &&
                   !_hasTimedOut,
               isSwapSelected: _swapTileSelection == tile.id,
+              colorScheme: colorScheme,
               onTap: !_swapTilesMode
                   ? () => _handleTileTap(tile)
                   : (_swapTilesMode &&
@@ -616,71 +867,22 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     );
   }
 
-  Widget _buildActions(BuildContext context) {
-    if (_showIntro) {
-      return FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFFFAF28),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 22),
-        ),
-        onPressed: null,
-        child: const Text('Get Ready...'),
-      );
-    }
+  Widget _buildActions(BuildContext context, ColorScheme colorScheme) {
+    final bool canInteract = !_isPreRoundActive &&
+        !_isSubmitting &&
+        !_completed &&
+        !_hasTimedOut;
 
-    if (_hasTimedOut) {
-      return FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFFF6E6E),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 22),
+    return SizedBox(
+      width: double.infinity,
+      child: PrimaryButton(
+        label: _isReady() ? 'Confirm Word' : 'Fill Letters',
+        onPressed: canInteract ? _handleSubmit : null,
+        textStyle: const TextStyle(
+          fontSize: 24,
+          decoration: TextDecoration.none,
         ),
-        onPressed: () => _handleFailure('Time\'s up! Try again for rewards.'),
-        child: const Text('Time\'s Up'),
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white70,
-              side: const BorderSide(color: Colors.white24),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            onPressed: _isSubmitting || _completed
-                ? null
-                : _usedTileIds.isEmpty
-                    ? null
-                    : _resetSelection,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Clear'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFFAF28),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 22),
-            ),
-            onPressed: _isSubmitting || _completed ? null : _handleSubmit,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black),
-                  )
-                : Text(_isReady() ? 'Confirm Word' : 'Fill Letters'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -695,14 +897,19 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     _burningTimer = null;
     _countdownTimer?.cancel();
     _countdownTimer = null;
-    _introTimer?.cancel();
-    _introTimer = null;
+    _preRoundTimer?.cancel();
+    _preRoundTimer = null;
+    _countdownHideTimer?.cancel();
+    _countdownHideTimer = null;
     _timeFreezeTimer?.cancel();
     _timeFreezeTimer = null;
     _timeFreezeActive = false;
     _resumeBurningAfterFreeze = false;
     _timeFreezeRemaining = null;
     _timeFreezeExpiresAt = null;
+    _showCountdownOverlay = false;
+    _countdownValue = null;
+    _resumePreRoundAfterPause = false;
     _swapTilesMode = false;
     _swapTileSelection = null;
     _highlightedSlotIndex = null;
@@ -732,25 +939,67 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       _timeLimitSeconds = _timeLimitSeconds.clamp(15, 45);
     }
     _timeRemaining = _timeLimitSeconds;
-    setState(() => _showIntro = true);
-    _introTimer = Timer(const Duration(seconds: 6), () {
-      if (!mounted) return;
-      _dismissIntro();
+    _beginPreRoundCountdown(startValue: 3);
+  }
+
+  void _beginPreRoundCountdown({required int startValue}) {
+    _preRoundTimer?.cancel();
+    _countdownHideTimer?.cancel();
+    final int initialValue = startValue <= 0 ? 0 : startValue;
+    setState(() {
+      _countdownValue = initialValue > 0 ? initialValue : null;
+      _showCountdownOverlay = true;
+    });
+    if (initialValue <= 0) {
+      _onPreRoundCountdownFinished();
+      return;
+    }
+    _preRoundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_countdownValue == null) {
+        timer.cancel();
+        return;
+      }
+      if (_countdownValue! > 1) {
+        setState(() {
+          _countdownValue = _countdownValue! - 1;
+        });
+      } else {
+        timer.cancel();
+        _onPreRoundCountdownFinished();
+      }
     });
   }
 
-  void _dismissIntro() {
-    if (!_showIntro) {
+  void _onPreRoundCountdownFinished() {
+    _preRoundTimer?.cancel();
+    _preRoundTimer = null;
+    setState(() {
+      _countdownValue = null;
+    });
+    _countdownHideTimer?.cancel();
+    _countdownHideTimer = Timer(const Duration(milliseconds: 420), () {
+      if (!mounted) return;
+      setState(() {
+        _showCountdownOverlay = false;
+      });
+      _beginStagePlay();
+    });
+  }
+
+  void _beginStagePlay() {
+    if (_isPaused) {
       return;
     }
-    _introTimer?.cancel();
-    setState(() => _showIntro = false);
-    if (_countdownTimer == null && !_isPaused) {
+    if (_countdownTimer == null) {
       _startCountdown();
     }
     if (_modifiers.contains(WheelModifierType.burningTiles) &&
         _burningTimer == null &&
-        !_isPaused) {
+        !_timeFreezeActive) {
       _startBurningTimer();
     }
   }
@@ -768,18 +1017,8 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     }
   }
 
-  void _resetSelection() {
-    setState(() {
-      _filledSlots.clear();
-      _usedTileIds.clear();
-      _highlightedSlotIndex = null;
-      _swapTilesMode = false;
-      _swapTileSelection = null;
-    });
-  }
-
   void _handleTileTap(WordTile tile) {
-    if (_showIntro || _isSubmitting || _completed || _hasTimedOut) return;
+    if (_isPreRoundActive || _isSubmitting || _completed || _hasTimedOut) return;
     if (_usedTileIds.contains(tile.id) || _disabledTileIds.contains(tile.id)) {
       return;
     }
@@ -833,7 +1072,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   }
 
   void _clearSlot(int slotIndex) {
-    if (_showIntro) return;
+    if (_isPreRoundActive) return;
     final tile = _filledSlots.remove(slotIndex);
     if (tile == null) return;
     setState(() => _usedTileIds.remove(tile.id));
@@ -847,7 +1086,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       _showSnack('Resume the quiz to use boosts.');
       return;
     }
-    if (_showIntro) {
+    if (_isPreRoundActive) {
       _showSnack('Boosts unlock once the round begins.');
       return;
     }
@@ -992,7 +1231,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       _startBurningTimer();
     }
     _resumeBurningAfterFreeze = false;
-    if (!_isPaused && !_hasTimedOut && !_showIntro) {
+    if (!_isPaused && !_hasTimedOut && !_isPreRoundActive) {
       _startCountdown();
     }
   }
@@ -1021,7 +1260,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
         }).length;
         return !_swapTilesMode && candidates >= 2;
       case BoostType.timeFreeze:
-        return !_timeFreezeActive && !_showIntro && _timeLimitSeconds > 0 && _timeRemaining > 0;
+        return !_timeFreezeActive && !_isPreRoundActive && _timeLimitSeconds > 0 && _timeRemaining > 0;
       case BoostType.streakShield:
         return !_streakShieldActive;
     }
@@ -1030,7 +1269,7 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
   String _boostUnavailableMessage(BoostType type) {
     switch (type) {
       case BoostType.reSpin:
-        return 'Finish the intro and keep playing to reshuffle tiles.';
+        return 'Wait for the round to begin to reshuffle tiles.';
       case BoostType.revealLetter:
         return 'No empty slots to reveal right now.';
       case BoostType.swapTiles:
@@ -1123,10 +1362,14 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     _countdownTimer = null;
     _burningTimer?.cancel();
     _burningTimer = null;
-    _introTimer?.cancel();
-    _introTimer = null;
     _timeFreezeTimer?.cancel();
     _timeFreezeTimer = null;
+    _preRoundTimer?.cancel();
+    _preRoundTimer = null;
+    _countdownHideTimer?.cancel();
+    _countdownHideTimer = null;
+    _showCountdownOverlay = false;
+    _countdownValue = null;
     _timeFreezeActive = false;
     _resumeBurningAfterFreeze = false;
     _timeFreezeRemaining = null;
@@ -1161,11 +1404,15 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
       _countdownTimer = null;
       _burningTimer?.cancel();
       _burningTimer = null;
-      _introTimer?.cancel();
-      _introTimer = null;
+      _preRoundTimer?.cancel();
+      _preRoundTimer = null;
+      _countdownHideTimer?.cancel();
+      _countdownHideTimer = null;
       _timeFreezeTimer?.cancel();
       _timeFreezeTimer = null;
       setState(() {
+        _showCountdownOverlay = false;
+        _countdownValue = null;
         _streakShieldActive = false;
         _timeFreezeActive = false;
         _timeFreezeExpiresAt = null;
@@ -1191,8 +1438,10 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     _countdownTimer = null;
     _burningTimer?.cancel();
     _burningTimer = null;
-    _introTimer?.cancel();
-    _introTimer = null;
+    _preRoundTimer?.cancel();
+    _preRoundTimer = null;
+    _countdownHideTimer?.cancel();
+    _countdownHideTimer = null;
     _timeFreezeTimer?.cancel();
     _timeFreezeTimer = null;
     _timeFreezeActive = false;
@@ -1207,7 +1456,11 @@ class _WordQuizScreenState extends ConsumerState<WordQuizScreen>
     await notifier.resetStreak();
 
     if (!mounted) return;
-    setState(() => _isSubmitting = false);
+    setState(() {
+      _showCountdownOverlay = false;
+      _countdownValue = null;
+      _isSubmitting = false;
+    });
     _showSnack(message);
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
@@ -1366,118 +1619,69 @@ class _StageData {
   final String? hint;
 }
 
-class _IntroOverlay extends StatelessWidget {
-  const _IntroOverlay({required this.child, required this.onDismiss});
+class _CountdownOverlay extends StatelessWidget {
+  const _CountdownOverlay({
+    required this.value,
+  });
 
-  final Widget child;
-  final VoidCallback onDismiss;
+  final int? value;
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: GestureDetector(
-        onTap: onDismiss,
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.8),
-          alignment: Alignment.center,
-          child: child,
+      child: AbsorbPointer(
+        absorbing: true,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          opacity: value == null ? 0.0 : 1.0,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Container(
+                color: Colors.black.withOpacity(0.75),
+              ),
+
+              Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    final curved = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutBack,
+                      reverseCurve: Curves.easeInCubic,
+                    );
+                    return FadeTransition(
+                      opacity: curved,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.7, end: 1.1).animate(curved),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: value == null
+                      ? const SizedBox.shrink()
+                      : StrokeText(
+                          key: ValueKey<int>(value!),
+                          text: value!.toString(),
+                          fontSize: 120,
+                          strokeColor: const Color(0xFFD8D5EA),
+                          fillColor: Colors.white,
+                          shadowColor: const Color(0xFF46557B),
+                          shadowBlurRadius: 6,
+                          shadowOffset: const Offset(0, 4),
+                          textAlign: TextAlign.center,
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _IntroPopup extends StatelessWidget {
-  const _IntroPopup({
-    required this.segment,
-    required this.bet,
-    required this.rewardMultiplier,
-    required this.penaltyMultiplier,
-    required this.modifiers,
-    required this.xpReward,
-    required this.chipReward,
-  });
-
-  final WheelSegmentId? segment;
-  final int bet;
-  final double rewardMultiplier;
-  final double penaltyMultiplier;
-  final Set<WheelModifierType> modifiers;
-  final int xpReward;
-  final int chipReward;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = segment?.name.toUpperCase() ?? 'STANDARD';
-    final summary = [
-      'Stake $bet chips',
-      '+$xpReward XP',
-      '+$chipReward chips',
-      'Reward ×${rewardMultiplier.toStringAsFixed(2)}',
-      'Penalty ×${penaltyMultiplier.toStringAsFixed(2)}',
-    ].join(' · ');
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFe58923), width: 2),
-        boxShadow: const [
-          BoxShadow(color: Colors.black54, blurRadius: 18, offset: Offset(0, 8)),
-        ],
-      ),
-      constraints: const BoxConstraints(maxWidth: 320),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFFFFAF28),
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            summary,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-          if (modifiers.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              children: modifiers
-                  .map(
-                    (modifier) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0x332196F3),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0x552196F3)),
-                      ),
-                      child: Text(
-                        modifier.name.toUpperCase(),
-                        style: const TextStyle(color: Colors.white70, fontSize: 11),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          const SizedBox(height: 16),
-          const Text(
-            'Get ready! The round begins shortly...',
-            style: TextStyle(color: Colors.white60, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _RewardSummary {
   const _RewardSummary({
@@ -1496,17 +1700,27 @@ class _RewardCelebration extends StatelessWidget {
   const _RewardCelebration({
     required this.summary,
     required this.onDismiss,
+    this.chipRewardImage,
+    this.xpRewardImage,
   });
 
   final _RewardSummary summary;
   final VoidCallback onDismiss;
+  final String? chipRewardImage;
+  final String? xpRewardImage;
 
   @override
   Widget build(BuildContext context) {
     final stats = <Widget>[];
     if (summary.hasXp) {
       stats.add(_RewardMetric(
-        icon: Icons.auto_awesome,
+        leading: xpRewardImage != null
+            ? Image.asset(
+                xpRewardImage!,
+                height: 28,
+                fit: BoxFit.contain,
+              )
+            : const Icon(Icons.star, color: Color(0xFFFFAF28), size: 24),
         label: 'XP Earned',
         value: '+${summary.xp}',
       ));
@@ -1516,7 +1730,13 @@ class _RewardCelebration extends StatelessWidget {
         stats.add(const SizedBox(height: 12));
       }
       stats.add(_RewardMetric(
-        icon: Icons.casino,
+        leading: chipRewardImage != null
+            ? Image.asset(
+                chipRewardImage!,
+                height: 28,
+                fit: BoxFit.contain,
+              )
+            : const Icon(Icons.casino, color: Color(0xFFFFAF28), size: 24),
         label: 'Chips Won',
         value: '+${summary.chips}',
       ));
@@ -1526,76 +1746,77 @@ class _RewardCelebration extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          ModalBarrier(
-            color: Colors.black.withValues(alpha: 0.75),
-            dismissible: true,
-            onDismiss: onDismiss,
+          GestureDetector(
+            onTap: onDismiss,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  Images.winConfetii,
+                  fit: BoxFit.cover,
+                ),
+                Container(color: Colors.black.withOpacity(0.25)),
+              ],
+            ),
           ),
-          Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFFAF28), width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 10)),
-                ],
-              ),
-              constraints: const BoxConstraints(maxWidth: 320),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.emoji_events, color: Color(0xFFFFAF28), size: 52),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Word Complete!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+          Center(
+            child: GestureDetector(
+              onTap: onDismiss,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  final double scale = 0.85 + (0.15 * value);
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.scale(
+                      scale: scale,
+                      child: child,
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Collect your rewards before the next challenge.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 15),
-                  ),
-                  if (stats.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    ...stats,
-                  ] else ...[
-                    const SizedBox(height: 20),
-                    const Text(
-                      'No bonus rewards this time, but you kept your streak alive!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white60, fontSize: 14),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onDismiss,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFAF28),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        textStyle: const TextStyle(
+                  );
+                },
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StrokeText(
+                        text: 'Word Complete!',
+                        fontSize: 36,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Collect your rewards before the next challenge.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Cookies',
+                          height: 1.3,
+                          decoration: TextDecoration.none,
                         ),
                       ),
-                      child: const Text('Collect Rewards'),
-                    ),
+                      if (stats.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        ...stats,
+                      ] else ...[
+                        const SizedBox(height: 20),
+                        const Text(
+                          'No bonus rewards this time, but you kept your streak alive!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white60, fontSize: 14),
+                        ),
+                      ],
+                      const SizedBox(height: 28),
+                      PrimaryButton(
+                        label: 'Collect Rewards',
+                        onPressed: onDismiss,
+                        textStyle: const TextStyle(fontSize: 24),
+                      )
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -1607,12 +1828,12 @@ class _RewardCelebration extends StatelessWidget {
 
 class _RewardMetric extends StatelessWidget {
   const _RewardMetric({
-    required this.icon,
+    required this.leading,
     required this.label,
     required this.value,
   });
 
-  final IconData icon;
+  final Widget leading;
   final String label;
   final String value;
 
@@ -1627,20 +1848,30 @@ class _RewardMetric extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFFFFAF28), size: 24),
-          const SizedBox(width: 12),
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: Center(child: leading),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontFamily: 'Cookies',
+                decoration: TextDecoration.none,
+              ),
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFFFFAF28),
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontFamily: 'Cookies',
+              decoration: TextDecoration.none,
             ),
           ),
         ],
@@ -1704,84 +1935,62 @@ class _PauseOverlay extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const ModalBarrier(color: Color(0xAA000000), dismissible: false),
+          const ModalBarrier(
+            color: Color(0xDD000000), // сделал более темным - с AA на DD
+            dismissible: false
+          ),
           Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFAF28), width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black54, blurRadius: 24, offset: Offset(0, 14)),
-                ],
-              ),
-              constraints: const BoxConstraints(maxWidth: 320),
+              margin: const EdgeInsets.symmetric(horizontal: 66),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Paused',
+                  const StrokeText(
+                    text: 'Paused',
+                    fontSize: 36,
+                    strokeColor: Color(0xFFD8D5EA),
+                    fillColor: Colors.white,
+                    shadowColor: Color(0xFF46557B),
+                    shadowBlurRadius: 4,
+                    shadowOffset: Offset(0, 3),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                    ),
                   ),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
+                  PrimaryButton(
+                    label: 'Resume',
                     onPressed: onResume,
-                    icon: const Icon(Icons.play_arrow_rounded, color: Colors.black),
-                    label: const Text('Resume'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFAF28),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 24,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  const SizedBox(height: 14),
-                  OutlinedButton.icon(
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    label: 'Shop',
                     onPressed: onShop,
-                    icon: const Icon(Icons.storefront_rounded),
-                    label: const Text('Shop'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white70,
-                      side: const BorderSide(color: Colors.white24),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 24,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    label: 'Stats',
                     onPressed: onStats,
-                    icon: const Icon(Icons.bar_chart_rounded),
-                    label: const Text('Stats'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white70,
-                      side: const BorderSide(color: Colors.white24),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 24,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    label: 'End Quiz',
                     onPressed: onEndQuiz,
-                    icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
-                    label: const Text('End Quiz'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFE74C3C),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 24,
                     ),
                   ),
                 ],
@@ -1811,71 +2020,79 @@ class _BoostsOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double listHeight =
+        (MediaQuery.sizeOf(context).height * 0.5).clamp(220.0, 420.0);
     return Positioned.fill(
       child: Stack(
         alignment: Alignment.center,
         children: [
-          ModalBarrier(
-            color: const Color(0xAA000000),
-            dismissible: true,
-            onDismiss: onDismiss,
-          ),
+          const ModalBarrier(color: Color(0xAA000000), dismissible: false),
           Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: const Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFAF28), width: 2),
+                color: Color(0xFF261B40),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: const Color(0x40FFFFFF)),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black54, blurRadius: 24, offset: Offset(0, 14)),
+                  BoxShadow(color: Color(0x66000000), blurRadius: 18, offset: Offset(0, 10)),
                 ],
               ),
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.bolt_rounded, color: Color(0xFFFFAF28)),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Boosts',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const StrokeText(
+                          text: 'Boosts',
+                          fontSize: 28,
+                          textAlign: TextAlign.left,
+                        ),
+                        IconButton(
+                          onPressed: onDismiss,
+                          icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 32),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Activate a boost instantly to tilt the odds in your favor.',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 14,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: listHeight,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          children: [
+                            for (final type in BoostType.values)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _BoostOptionTile(
+                                  info: infoBuilder(type),
+                                  count: inventory[type] ?? 0,
+                                  enabled: (inventory[type] ?? 0) > 0 && canActivate(type),
+                                  onTap: () => onBoostSelected(type),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: onDismiss,
-                        icon: const Icon(Icons.close_rounded, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  ...BoostType.values.map((type) {
-                    final count = inventory[type] ?? 0;
-                    final info = infoBuilder(type);
-                    final bool enabled = count > 0 && canActivate(type);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _BoostOptionTile(
-                        icon: info.icon,
-                        title: info.label,
-                        description: info.description,
-                        count: count,
-                        enabled: enabled,
-                        accent: info.accent,
-                        onTap: enabled ? () => onBoostSelected(type) : null,
-                      ),
-                    );
-                  }),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1887,84 +2104,140 @@ class _BoostsOverlay extends StatelessWidget {
 
 class _BoostOptionTile extends StatelessWidget {
   const _BoostOptionTile({
-    required this.icon,
-    required this.title,
-    required this.description,
+    required this.info,
     required this.count,
     required this.enabled,
-    required this.accent,
     this.onTap,
   });
 
-  final IconData icon;
-  final String title;
-  final String description;
+  final BoostInfo info;
   final int count;
   final bool enabled;
-  final Color accent;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+    final Color accent = info.accent;
+    final bool canTap = enabled && onTap != null;
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: enabled ? 1.0 : 0.45,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF2A2A2A),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: enabled ? accent : Colors.white12),
+          gradient: LinearGradient(
+            colors: [
+              accent.withOpacity(0.24),
+              const Color(0x221F1039),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: accent.withOpacity(0.32)),
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: enabled ? accent : accent.withValues(alpha: 0.4), size: 24),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: [accent.withOpacity(0.45), accent.withOpacity(0.14)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Icon(info.icon, color: Colors.white, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              info.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontFamily: 'Cookies',
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
                           ),
-                        ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.24),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: Text(
+                              'Owned: $count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: (enabled ? accent : accent.withValues(alpha: 0.4)).withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '×$count',
-                          style: TextStyle(
-                            color: enabled ? accent : Colors.white54,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      const SizedBox(height: 6),
+                      Text(
+                        info.description,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          decoration: TextDecoration.none,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    description,
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 220,
+                child: PrimaryButton(
+                  uppercase: false,
+                  onPressed: canTap ? onTap : null,
+                  enabled: canTap,
+                  busy: false,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: canTap ? Colors.transparent : Colors.white.withOpacity(0.15),
+                  backgroundGradient: canTap
+                      ? LinearGradient(
+                          colors: [accent.withOpacity(0.95), accent.withOpacity(0.7)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : null,
+                  borderColor: accent,
+                  disabledBorderColor: Colors.white24,
+                  child: Text(
+                    canTap ? 'Use boost'.toUpperCase() : 'Unavailable'.toUpperCase(),
                     style: TextStyle(
-                      color: enabled ? Colors.white70 : Colors.white38,
-                      fontSize: 13,
+                      color: canTap ? Colors.white : Colors.white54,
+                      fontSize: 18,
+                      fontFamily: 'Cookies',
+                      decoration: TextDecoration.none,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -1972,57 +2245,66 @@ class _BoostOptionTile extends StatelessWidget {
   }
 }
 
-
 class _SlotChip extends StatelessWidget {
   const _SlotChip({
     required this.isFilled,
     this.letter,
     this.isHighlighted = false,
     this.onTap,
+    required this.colorScheme,
   });
 
   final bool isFilled;
   final String? letter;
   final bool isHighlighted;
   final VoidCallback? onTap;
+  final ColorScheme colorScheme;
 
   @override
   Widget build(BuildContext context) {
-    final Color background = isFilled ? const Color(0xFFFFAF28) : const Color(0xFF232323);
+    final Color filledBackground = colorScheme.secondaryContainer.withOpacity(0.95);
+    final Color emptyBackground = Colors.white.withOpacity(0.05);
+    final Color highlightBorder = colorScheme.tertiary.withOpacity(0.85);
+    final Color filledBorder = colorScheme.secondary.withOpacity(0.75);
+    final Color emptyBorder = Colors.white.withOpacity(0.16);
+    final Color background = isFilled ? filledBackground : emptyBackground;
     final Color border = isHighlighted
-        ? const Color(0xFF00F5A0)
+        ? highlightBorder
         : isFilled
-            ? const Color(0xFFE58923)
-            : Colors.white24;
+            ? filledBorder
+            : emptyBorder;
+    final Color placeholderColor = Colors.white.withOpacity(0.22);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 58,
-        height: 58,
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 62,
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: border, width: 2),
-          boxShadow: isFilled
-              ? const [
-              BoxShadow(color: Color(0x33FFA500), blurRadius: 10, offset: Offset(0, 6)),
-                ]
-              : const [],
         ),
         alignment: Alignment.center,
         child: letter == null
-            ? const Text(
+            ? Text(
                 '—',
-                style: TextStyle(color: Colors.white30, fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: placeholderColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.none,
+                ),
               )
             : Text(
                 letter!,
-                style: const TextStyle(
-                  color: Colors.black,
+                style: TextStyle(
+                  color: colorScheme.onSecondaryContainer,
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.none,
                 ),
               ),
       ),
@@ -2039,6 +2321,7 @@ class _LetterTile extends StatelessWidget {
     required this.isSwapMode,
     required this.isSwapSelectable,
     required this.isSwapSelected,
+    required this.colorScheme,
     this.onTap,
   });
 
@@ -2049,30 +2332,41 @@ class _LetterTile extends StatelessWidget {
   final bool isSwapMode;
   final bool isSwapSelectable;
   final bool isSwapSelected;
+  final ColorScheme colorScheme;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final bool canTap = onTap != null;
     final bool highlightSwap = isSwapMode && isSwapSelectable;
+    final Color activeBorder = colorScheme.primary.withOpacity(0.75);
+    final Color idleBorder = Colors.white.withOpacity(0.16);
+    final Color usedBorder = Colors.white.withOpacity(0.08);
+    final Color swapBorder = colorScheme.secondary.withOpacity(0.85);
+    final Color highlightBorder = colorScheme.tertiary.withOpacity(0.8);
+    final Color errorBorder = colorScheme.error.withOpacity(0.9);
     final Color borderColor = isError
-        ? const Color(0xFFFF6E6E)
+        ? errorBorder
         : isSwapSelected
-            ? const Color(0xFFFFAF28)
+            ? swapBorder
             : highlightSwap
-                ? const Color(0xFF00F5A0)
+                ? highlightBorder
                 : isUsed
-                    ? Colors.white10
-                    : Colors.white24;
+                    ? usedBorder
+                    : activeBorder;
+    final Color baseBackground = Color.alphaBlend(
+      colorScheme.surfaceVariant.withOpacity(0.55),
+      Colors.black.withOpacity(0.7),
+    );
     final Color background = isUsed
-        ? const Color(0xFF1C1C1C)
+        ? Colors.white.withOpacity(0.05)
         : isError
-            ? const Color(0x33FF6E6E)
+            ? colorScheme.error.withOpacity(0.22)
             : isSwapSelected
-                ? const Color(0x33FFAF28)
+                ? colorScheme.secondaryContainer.withOpacity(0.32)
                 : isSwapMode && !highlightSwap
-                    ? const Color(0x22111111)
-                    : const Color(0xFF2A2A2A);
+                    ? Colors.white.withOpacity(0.03)
+                    : baseBackground;
 
     return GestureDetector(
       onTap: canTap ? onTap : null,
@@ -2081,23 +2375,24 @@ class _LetterTile extends StatelessWidget {
         opacity: canTap ? 1 : 0.45,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           width: 68,
           height: 68,
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor, width: 2),
-            boxShadow: const [
-              BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 6)),
-            ],
           ),
           alignment: Alignment.center,
           child: Text(
             tile.character,
             style: TextStyle(
-              color: isError ? const Color(0xFFFF8686) : Colors.white,
+              color: isError
+                  ? colorScheme.error
+                  : colorScheme.onSurface.withOpacity(isDisabled ? 0.5 : 1.0),
               fontSize: 24,
               fontWeight: FontWeight.w700,
+              decoration: TextDecoration.none,
             ),
           ),
         ),

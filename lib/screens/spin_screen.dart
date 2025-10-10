@@ -11,6 +11,8 @@ import '../helpers/image_paths.dart';
 
 import '../widgets/header.dart';
 import '../widgets/wheel_display.dart';
+import '../widgets/stroke_text.dart';
+import '../widgets/primary_button.dart';
 
 import '../models/player_progress.dart';
 import '../models/wheel_segment.dart';
@@ -198,22 +200,21 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        'Spin the Wheel',
-                        style: TextStyle(
-                          fontSize: 44,
-                          foreground: Paint()
-                            ..style = PaintingStyle.stroke
-                            ..strokeWidth = 4
-                            ..color = const Color(0xFFE2B400),
-                        ),
+                      const SizedBox(height: 44),
+                      const StrokeText(
+                        text: 'SPIN THE WHEEL',
+                        fontSize: 44,
+                        strokeColor: Color(0xFFD8D5EA),
+                        fillColor: Colors.white,
+                        shadowColor: Color(0xFF46557B),
+                        shadowBlurRadius: 4,
+                        shadowOffset: Offset(0, 3),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
                       const Text(
-                        'Tap the wheel to discover your next word puzzle.',
+                        'Tap the wheel to discover your\n next word puzzle.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: Colors.white70, fontSize: 18),
                       ),
                       const SizedBox(height: 12),
                       Expanded(
@@ -271,7 +272,6 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
         else if (_pendingLevelUp != null)
           _LevelUpCelebration(
             event: _pendingLevelUp!,
-            controller: _confettiController,
             onDismiss: _dismissLevelUp,
           ),
       ],
@@ -525,12 +525,13 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
   ) {
     return showDialog<WordChallenge>(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.75),
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1C1C1C),
-          title: const Text(
-            'Choose your word category',
-            style: TextStyle(color: Colors.white),
+          title: const StrokeText(
+            text: 'Choose your word category',
+            fontSize: 18,
+            textAlign: TextAlign.center,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -548,9 +549,9 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
             ],
           ),
           actions: [
-            TextButton(
+            PrimaryButton(
               onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
+              label: 'Cancel',
             ),
           ],
         );
@@ -582,10 +583,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
 
   int _effectiveBet(PlayerProgress progress, WheelConfig config) {
     final bet = progress.currentBet;
-    if (bet <= 0) {
-      return config.spinCost;
-    }
-    return bet;
+    return bet > 0 ? bet : config.spinCost;
   }
 
   void _showSnack(String message) {
@@ -673,7 +671,7 @@ class _WheelDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width + 180;
     final wheelSize = screenWidth;
     final visibleHeight = wheelSize * 0.85;
 
@@ -705,29 +703,25 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.celebration_rounded, color: Color(0xFFFFAF28), size: 48),
-        const SizedBox(height: 12),
-        const Text(
-          'All words completed!',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70, fontSize: 24),
-        ),
-        const SizedBox(height: 18),
-        FilledButton.icon(
-          onPressed: onResetTap,
-          icon: const Icon(Icons.refresh_rounded, color: Colors.black),
-          label: const Text('Reset Progress'),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFFFAF28),
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 20),
+    return SizedBox(
+      width: 280,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'All words completed!',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 24),
           ),
-        ),
-      ],
+          const SizedBox(height: 18),
+          PrimaryButton(
+            onPressed: onResetTap,
+            label: 'Reset Progress',
+            uppercase: true,
+            textStyle: const TextStyle(fontSize: 26),
+          )
+        ],
+      ),
     );
   }
 }
@@ -762,12 +756,10 @@ class _ErrorState extends StatelessWidget {
 class _LevelUpCelebration extends StatelessWidget {
   const _LevelUpCelebration({
     required this.event,
-    required this.controller,
     required this.onDismiss,
   });
 
   final LevelUpEvent event;
-  final ConfettiController? controller;
   final VoidCallback onDismiss;
 
   @override
@@ -776,58 +768,54 @@ class _LevelUpCelebration extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          ModalBarrier(
-            color: Colors.black.withValues(alpha: 0.75),
-            dismissible: true,
-            onDismiss: onDismiss,
-          ),
-          if (controller != null)
-            ConfettiWidget(
-              confettiController: controller!,
-              blastDirectionality: BlastDirectionality.explosive,
-              numberOfParticles: 40,
-              maxBlastForce: 18,
-              minBlastForce: 8,
-              emissionFrequency: 0.05,
-              colors: const [
-                Color(0xFFFFAF28),
-                Color(0xFF00F5A0),
-                Color(0xFF4C6FFF),
-                Colors.white,
-              ],
-            ),
           GestureDetector(
             onTap: onDismiss,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFFAF28), width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 10)),
-                ],
-              ),
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.auto_awesome, color: Color(0xFFFFAF28), size: 48),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Level Up!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  Images.winConfetii,
+                  fit: BoxFit.cover,
+                ),
+                Container(color: Colors.black.withOpacity(0.25)),
+              ],
+            ),
+          ),
+          Center(
+            child: GestureDetector(
+              onTap: onDismiss,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 10),
+                    const StrokeText(
+                      text: 'Level Up!',
+                      fontSize: 42,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'You reached ${event.label}.',
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          color: Colors.white54, 
+                          fontSize: 16,
+                          fontFamily: 'Cookies',
+                        ),
+                        children: [
+                          const TextSpan(text: 'You reached '), 
+                          TextSpan(
+                            text: event.label, 
+                            style: const TextStyle(
+                              color: Color(0xFFFF2A5F), 
+                            ),
+                          ),
+                          const TextSpan(text: '.'), 
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -857,38 +845,22 @@ class _JackpotCelebration extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          ModalBarrier(
-            color: Colors.black.withValues(alpha: 0.75),
-            dismissible: true,
-            onDismiss: onDismiss,
-          ),
-          if (controller != null)
-            ConfettiWidget(
-              confettiController: controller!,
-              blastDirectionality: BlastDirectionality.explosive,
-              numberOfParticles: 50,
-              maxBlastForce: 20,
-              minBlastForce: 10,
-              emissionFrequency: 0.04,
-              colors: const [
-                Color(0xFFFFAF28),
-                Color(0xFF00F5A0),
-                Color(0xFF4C6FFF),
-                Colors.white,
+          GestureDetector(
+            onTap: onDismiss,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  Images.winConfetii,
+                  fit: BoxFit.cover,
+                ),
+                Container(color: Colors.black.withOpacity(0.45)),
               ],
             ),
+          ),
           Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F1F1F),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFFAF28), width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 10)),
-                ],
-              ),
               constraints: const BoxConstraints(maxWidth: 340),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

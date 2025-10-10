@@ -1,12 +1,19 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/boost_catalog.dart';
 import '../helpers/image_paths.dart';
+
+import '../widgets/stroke_text.dart';
+import '../widgets/header.dart';
+import '../widgets/primary_button.dart';
+
 import '../models/player_progress.dart';
+
 import '../providers/player_progress_provider.dart';
+import '../providers/storage_providers.dart';
+
+import 'stats_screen.dart';
 
 class BoostShopScreen extends ConsumerStatefulWidget {
   const BoostShopScreen({super.key});
@@ -23,29 +30,41 @@ class _BoostShopScreenState extends ConsumerState<BoostShopScreen> {
   @override
   Widget build(BuildContext context) {
     final progressAsync = ref.watch(playerProgressProvider);
+    final profileAsync = ref.watch(activeProfileProvider);
 
     return Stack(
       fit: StackFit.expand,
       children: [
         Image.asset(Images.background, fit: BoxFit.cover),
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(54)),
-        ),
         Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            centerTitle: true,
-            title: const Text(
-              'Boost Shop',
-              style: TextStyle(fontSize: 24),
-            ),
-          ),
-          body: progressAsync.when(
-            data: (progress) {
-              return _buildContent(context, progress);
+          body: profileAsync.when(
+            data: (profile) {
+              if (profile == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return progressAsync.when(
+                data: (progress) => Column(
+                  children: [
+                    ProfileHeader(
+                      userName: profile.name,
+                      avatarIndex: profile.avatarIndex,
+                      progress: progress,
+                      onStatsTap: () =>
+                          Navigator.of(context).pushNamed(StatsScreen.routeName),
+                    ),
+                    Expanded(child: _buildContent(context, progress)),
+                  ],
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(
+                  child: Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+              );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
@@ -63,50 +82,28 @@ class _BoostShopScreenState extends ConsumerState<BoostShopScreen> {
   Widget _buildContent(BuildContext context, PlayerProgress progress) {
     final boosts = BoostCatalog.all();
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 48),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xCC1E1E1E),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.savings_rounded, color: Color(0xFFFFAF28)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Chips Balance',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        progress.chips.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFAF28),
-                    foregroundColor: Colors.black,
-                  ),
-                  onPressed: () => _showPricingHelp(context),
-                  child: const Text('Pricing Guide'),
-                ),
-              ],
+          const StrokeText(
+            text: 'BOOST SHOP',
+            fontSize: 44,
+            strokeColor: Color(0xFFD8D5EA),
+            fillColor: Colors.white,
+            shadowColor: Color(0xFF46557B),
+            shadowBlurRadius: 2,
+            height: 1.1,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Spend chips on power-ups that tilt the odds in your favor.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 15,
+              decoration: TextDecoration.none,
             ),
           ),
           const SizedBox(height: 24),
@@ -152,28 +149,6 @@ class _BoostShopScreenState extends ConsumerState<BoostShopScreen> {
       );
     }
   }
-
-  void _showPricingHelp(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('How we price boosts'),
-          content: const Text(
-            'Boost prices scale with their impact. Utility boosts like Shuffle cost the least, '
-            'while protection boosts such as Shield command the highest price. Time Freeze sits '
-            'between them because it preserves both the timer and burning tiles.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Got it'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class _BoostShopTile extends StatelessWidget {
@@ -196,90 +171,148 @@ class _BoostShopTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color accent = info.accent;
+
+    final bool showBusy = busy && enabled;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: enabled ? accent : Colors.white10),
+        color: Color(0xAA1F1039),
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+        border: Border.fromBorderSide(BorderSide(color: Color(0x33FFFFFF))),
+        boxShadow: [
+          BoxShadow(color: Color(0x66000000), blurRadius: 18, offset: Offset(0, 8)),
+        ],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: accent.withValues(alpha: 0.2),
-            child: Icon(info.icon, color: accent, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  info.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    colors: [accent.withOpacity(0.35), accent.withOpacity(0.14)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  info.description,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                Row(
+                child: Icon(info.icon, color: Colors.white, size: 30),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.savings_rounded,
-                        size: 18, color: enabled ? accent : Colors.white38),
-                    const SizedBox(width: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            info.label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontFamily: 'Cookies',
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.24),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white12),
+                          ),
+                          child: Text(
+                            'Owned: $owned',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
-                      price.toString(),
-                      style: TextStyle(
-                        color: enabled ? Colors.white : Colors.white38,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                      info.description,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(width: 18),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Owned: $owned',
-                        style: const TextStyle(color: Colors.white60, fontSize: 12),
-                      ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(Images.coin, width: 28),
+                              const SizedBox(width: 8),
+                              Text(
+                                price.toString(),
+                                style: TextStyle(
+                                  color: enabled ? Colors.white : Colors.white38,
+                                  fontSize: 20,
+                                  fontFamily: 'Cookies',
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          FilledButton(
-            onPressed: enabled ? onTap : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 260,
+              child: PrimaryButton(
+                label: 'BUY',
+                uppercase: false,
+                onPressed: enabled ? onTap : null,
+                busy: showBusy,
+                enabled: enabled,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                backgroundColor: enabled ? Colors.transparent : Colors.white.withOpacity(0.25),
+                backgroundGradient: enabled
+                    ? const LinearGradient(
+                        colors: [Color(0xFFAF7EE7), Color(0xFF383169), Color(0xFF272052)],
+                        stops: [0.05, 0.65, 1.0],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      )
+                    : null,
+                borderColor: Colors.white54,
+                shadowColor: Color(0xFFFFFFFF),
+                disabledBorderColor: Colors.transparent,
+                textStyle: TextStyle(
+                  fontSize: 26,
+                  color: enabled ? Color(0xFF383169) : Colors.white70,
+                  fontFamily: 'Cookies',
+                ),
+              ),
             ),
-            child: busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.black),
-                  )
-                : const Text(
-                    'Buy',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-          ),
+          )
         ],
       ),
     );

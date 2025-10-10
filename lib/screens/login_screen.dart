@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../helpers/image_paths.dart';
 import '../providers/player_progress_provider.dart';
 import '../providers/storage_providers.dart';
+import '../widgets/primary_button.dart';
+import '../widgets/stroke_text.dart';
 
 import 'create_account_screen.dart';
 import 'home_screen.dart';
@@ -23,6 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   bool _isLoading = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -73,10 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       fit: StackFit.expand,
       children: [
         Image.asset(Images.background, fit: BoxFit.cover),
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(26)),
-        ),
+
         Scaffold(
           backgroundColor: Colors.transparent,
           body: SingleChildScrollView(
@@ -91,126 +91,102 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        Stack(
-                          children: [
-                            Text(
-                              'Log In',
-                              style: TextStyle(
-                                fontSize: 44,
-                                foreground: Paint()
-                                  ..style = PaintingStyle.stroke
-                                  ..strokeWidth = 4
-                                  ..color = const Color(0xFFE2B400),
-                              ),
-                            ),
-                            const Text(
-                              'Log In',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 44,
-                                color: Color(0xFF000000),
-                                shadows: [
-                                  Shadow(
-                                    color: Color(0xFFF6D736),
-                                    blurRadius: 2,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        const StrokeText(
+                          text: 'LOG IN',
+                          fontSize: 48,
+                          strokeColor: Color(0xFFD8D5EA),
+                          fillColor: Colors.white,
+                          shadowColor: Color(0xFF46557B),
+                          shadowBlurRadius: 2,
+                          shadowOffset: Offset(0, 2),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Enter the display name you used\n when creating your profile',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
                         ),
                         const SizedBox(height: 32),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: TextFormField(
-                            controller: _nameController,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Display name',
-                              labelStyle: const TextStyle(
-                                color: Color(0xFFB8B8B8),
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFF1C1C1C),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF2E2E2E),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF2E2E2E),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFF6D736),
-                                ),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Enter your profile name';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 28),
                         Container(
-                          width: double.infinity,
                           margin: const EdgeInsets.symmetric(
                             horizontal: 40,
                           ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: const Color(0xFFe58923),
-                                width: 3,
-                              ),
-                            ),
-                            borderRadius: BorderRadius.circular(34),
-                          ),
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFffaf28),
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              textStyle: const TextStyle(
-                                fontFamily: 'Cookies',
-                                fontSize: 24,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                            ),
-                            onPressed: _isLoading ? null : _login,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      color: Colors.black,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: _nameController,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Display name',
+                                  labelStyle: const TextStyle(
+                                    color: Color(0xFFFFFFFF),
+                                    fontSize: 18,
+                                  ),
+                                  floatingLabelStyle: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFFFFFFFF),
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0x44FFFFFF),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 16,
+                                      ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      36,
                                     ),
-                                  )
-                                : const Text('Log In'),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFD8D5EA),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      36,
+                                    ),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFD8D5EA),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      36,
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: Color(0xFFD8D5EA),
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null ||
+                                      value.trim().isEmpty) {
+                                    return 'Please enter your profile name.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+
+                              PrimaryButton(
+                                label: 'Log In',
+                                onPressed: _login,
+                                busy: _isSaving,
+                                enabled: !_isSaving,
+                              ),
+                            ],
                           ),
                         ),
+
                         const Spacer(),
+
                         TextButton(
                           onPressed: _isLoading
                               ? null

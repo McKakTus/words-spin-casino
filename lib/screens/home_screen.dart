@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../helpers/image_paths.dart';
+import '../widgets/primary_button.dart';
 
 import 'spin_screen.dart';
 import 'stats_screen.dart';
@@ -18,12 +19,7 @@ class HomeScreen extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(Images.background, fit: BoxFit.cover),
-
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(26)),
-        ),
+        Image.asset(Images.home, fit: BoxFit.cover),
 
         Scaffold(
           backgroundColor: Colors.transparent, 
@@ -34,18 +30,8 @@ class HomeScreen extends StatelessWidget {
                 const Spacer(),
 
                 SizedBox(
-                  width: 200,
+                  width: 220,
                   child: Image.asset(Images.logo),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'Spin the wheel, solve the word, earn the rewards.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    height: 1.3,
-                  ),
                 ),
 
                 const Spacer(),
@@ -99,35 +85,10 @@ class MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          border: const Border(
-            bottom: BorderSide(
-              color: Color(0xFFe58923),
-              width: 3,
-            ),
-          ),
-          borderRadius: BorderRadius.circular(34),
-        ),
-        child: FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: Color(0xFF141414),
-            foregroundColor: Color(0xFFffaf28),
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            textStyle: const TextStyle(
-              fontFamily: 'Cookies',
-              fontSize: 24,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
-            ),
-          ),
-          onPressed: onPressed,
-          child: Text(text),
-        ),
-      ),
+    return PrimaryButton(
+      label: text,
+      onPressed: onPressed,
+      uppercase: true,
     );
   }
 }

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../helpers/image_paths.dart';
 import '../providers/player_progress_provider.dart';
 import '../providers/storage_providers.dart';
+import '../widgets/primary_button.dart';
+import '../widgets/stroke_text.dart';
 
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -83,8 +85,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   Widget build(BuildContext context) {
     final prefsAsync = ref.watch(sharedPreferencesProvider);
 
-    const Color neonYellow = Color(0xFFffaf28);
-
     final paddingTop = MediaQuery.paddingOf(context).top + 44;
 
     return prefsAsync.when(
@@ -97,11 +97,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           fit: StackFit.expand,
           children: [
             Image.asset(Images.background, fit: BoxFit.cover),
-
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: Container(color: Colors.black.withAlpha(26)),
-            ),
 
             Scaffold(
               backgroundColor: Colors.transparent,
@@ -119,36 +114,14 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                           key: _formKey,
                           child: Column(
                             children: [
-                              Stack(
-                                children: [
-                                  Text(
-                                    'Welcome'.toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 44,
-                                      foreground: Paint()
-                                        ..style = PaintingStyle.stroke
-                                        ..strokeWidth = 4
-                                        ..color = const Color(0xFFE2B400),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Welcome'.toUpperCase(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 44,
-                                      color: Color(0xFF000000),
-                                      shadows: [
-                                        Shadow(
-                                          color: const Color(0xFFF6D736),
-                                          blurRadius: 2,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              const StrokeText(
+                                text: 'WELCOME',
+                                fontSize: 48,
+                                strokeColor: Color(0xFFD8D5EA),
+                                fillColor: Colors.white,
+                                shadowColor: Color(0xFF46557B),
+                                shadowBlurRadius: 2,
+                                shadowOffset: Offset(0, 2),
                               ),
 
                               const SizedBox(height: 18),
@@ -157,15 +130,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                 'Pick an avatar to represent you.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.white54,
                                   fontSize: 18,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black54,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
                                 ),
                               ),
 
@@ -177,9 +143,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                   controller: _page,
                                   onPageChanged: (i) =>
                                       setState(() => _index = i),
-                                  itemCount: Images.avatars.length,
+                                  itemCount: Images.profiles.length,
                                   itemBuilder: (_, i) => _AvatarCard(
-                                    asset: Images.avatars[i],
+                                    asset: Images.profiles[i],
                                     selected: _index == i,
                                   ),
                                 ),
@@ -204,17 +170,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                       decoration: InputDecoration(
                                         labelText: 'Display name',
                                         labelStyle: const TextStyle(
-                                          color: Color(0xFFB8B8B8),
+                                          color: Color(0xFFFFFFFF),
+                                          fontSize: 18,
                                         ),
                                         floatingLabelStyle: TextStyle(
                                           color: Colors.white,
                                         ),
-                                        hintText: 'e.g. Word Wizard',
+                                        hintText: 'e.g. Jony',
                                         hintStyle: const TextStyle(
-                                          color: Color(0xFF6F6F6F),
+                                          color: Color(0xFFFFFFFF),
                                         ),
                                         filled: true,
-                                        fillColor: const Color(0xFF1C1C1C),
+                                        fillColor: const Color(0x44FFFFFF),
                                         contentPadding:
                                             const EdgeInsets.symmetric(
                                               horizontal: 20,
@@ -225,7 +192,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                             36,
                                           ),
                                           borderSide: const BorderSide(
-                                            color: Color(0xFF2E2E2E),
+                                            color: Color(0xFFD8D5EA),
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
@@ -233,7 +200,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                             36,
                                           ),
                                           borderSide: const BorderSide(
-                                            color: Color(0xFF2E2E2E),
+                                            color: Color(0xFFD8D5EA),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
@@ -241,7 +208,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                             36,
                                           ),
                                           borderSide: BorderSide(
-                                            color: Color(0xFFF6D736),
+                                            color: Color(0xFFD8D5EA),
                                           ),
                                         ),
                                       ),
@@ -253,67 +220,30 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                         return null;
                                       },
                                     ),
-
                                     const SizedBox(height: 24),
 
-                                    Container(
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: _isSaving ? const Color(0x669E9E9E) : const Color(0xFFe58923),
-                                            width: 3,
-                                          ),
-                                        ),
-                                        borderRadius: BorderRadius.circular(34),
-                                      ),
-                                      child: FilledButton(
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: neonYellow,
-                                          foregroundColor: Colors.black,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 20,
-                                          ),
-                                          textStyle: const TextStyle(
-                                            fontFamily: 'Cookies',
-                                            fontSize: 24,
-                                            letterSpacing: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              32,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: _isSaving
-                                            ? null
-                                            : _saveAndContinue,
-                                        child: _isSaving
-                                            ? const SizedBox(
-                                                width: 22,
-                                                height: 22,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 3,
-                                                    ),
-                                              )
-                                            : const Text('Create profile'),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    TextButton(
-                                      onPressed: _isSaving
-                                          ? null
-                                          : () => Navigator.of(context)
-                                              .pushReplacementNamed(
-                                                LoginScreen.routeName,
-                                              ),
-                                      child: const Text(
-                                        'Already have a profile? Log in',
-                                        style: TextStyle(color: Colors.white70),
-                                      ),
+                                    PrimaryButton(
+                                      label: 'Create profile',
+                                      onPressed: _saveAndContinue,
+                                      busy: _isSaving,
+                                      enabled: !_isSaving,
                                     ),
                                   ],
+                                ),
+                              ),
+                            
+                              const Spacer(),
+                              
+                              TextButton(
+                                onPressed: _isSaving
+                                    ? null
+                                    : () => Navigator.of(context)
+                                        .pushReplacementNamed(
+                                          LoginScreen.routeName,
+                                        ),
+                                child: const Text(
+                                  'Already have a profile? Log in',
+                                  style: TextStyle(color: Colors.white70),
                                 ),
                               ),
                             ],
@@ -357,10 +287,24 @@ class _AvatarCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(36)),
-          clipBehavior: Clip.hardEdge,
-          child: Image.asset(asset, fit: BoxFit.cover),
+        child: Material(
+          color: const Color(0x34FFFFFF),            
+          clipBehavior: Clip.antiAlias,             
+          shape: RoundedRectangleBorder(             
+            borderRadius: BorderRadius.circular(36),
+            side: BorderSide(
+              color: selected ? const Color(0xFFD8D5EA) : Colors.transparent,
+              width: 4,
+            ),
+          ),
+          child: AspectRatio(
+            aspectRatio: 1,                         
+            child: Image.asset(
+              asset,
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,   
+            ),
+          ),
         ),
       ),
     );
