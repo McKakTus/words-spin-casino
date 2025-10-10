@@ -1,12 +1,12 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/boost_catalog.dart';
 import '../helpers/image_paths.dart';
 
+import '../widgets/primary_button.dart';
 import '../widgets/header.dart';
+import '../widgets/stroke_text.dart';
 
 import '../models/player_progress.dart';
 import '../models/word_challenge.dart';
@@ -43,10 +43,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       fit: StackFit.expand,
       children: [
         Image.asset(Images.background, fit: BoxFit.cover),
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(66)),
-        ),
         Scaffold(
           backgroundColor: Colors.transparent,
           extendBody: true,
@@ -145,7 +141,6 @@ class _StatsContent extends StatelessWidget {
   final Future<void> Function() onResetPressed;
 
   static const Color _accent = Color(0xFFFFAF28);
-  static const Color _cardColor = Color(0xFF141414);
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +153,6 @@ class _StatsContent extends StatelessWidget {
       0,
       totalWords,
     ).toInt();
-    final completionRate = totalWords == 0 ? 0.0 : completedWords / totalWords;
 
     final wordMap = {
       for (final word in words) word.id: word,
@@ -242,152 +236,83 @@ class _StatsContent extends StatelessWidget {
       ),
     ];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _JackpotProgressSection(progress: progress.jackpotProgress),
-          const SizedBox(height: 28),
-          Text(
-            'Word Progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+    final TextStyle headingStyle =
+        Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+              fontSize: 24,
+              decoration: TextDecoration.none,
+            ) ??
+            const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              decoration: TextDecoration.none,
+            );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const StrokeText(
+            text: 'STATS',
+            fontSize: 44,
+            strokeColor: Color(0xFFD8D5EA),
+            fillColor: Colors.white,
+            shadowColor: Color(0xFF46557B),
+            shadowBlurRadius: 2,
+            shadowOffset: Offset(0, 2),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: _glassDecoration,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Completion',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      '${(completionRate * 100).round()}%',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: LinearProgressIndicator(
-                    value: completionRate,
-                    minHeight: 12,
-                    backgroundColor: Colors.white10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(_accent),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 20,
-                  runSpacing: 12,
-                  children: [
-                    _ProgressChip(
-                      label: 'Total words',
-                      value: totalWords.toString(),
-                      icon: Icons.playlist_add_check_rounded,
-                    ),
-                    _ProgressChip(
-                      label: 'Completed',
-                      value: completedWords.toString(),
-                      icon: Icons.bolt_rounded,
-                    ),
-                    _ProgressChip(
-                      label: 'Remaining',
-                      value: remainingWords.toString(),
-                      icon: Icons.flag_outlined,
-                    ),
-                  ],
-                ),
-              ],
+          const SizedBox(height: 16),
+          const Text(
+            'Track your progress, boosts,\n and achievements',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 16,
+              decoration: TextDecoration.none,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
+          _JackpotProgressSection(progress: progress.jackpotProgress),
+          const SizedBox(height: 32),
           Text(
             'Key Word Stats',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: headingStyle,
           ),
           const SizedBox(height: 12),
           _StatsGrid(stats: stats),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
+          Text(
+            'Boost Inventory',
+            style: headingStyle,
+          ),
+          const SizedBox(height: 12),
           _BoostInventorySection(
             inventory: progress.boostInventory,
             onShopTap: () =>
                 Navigator.of(context).pushNamed(BoostShopScreen.routeName),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
           Text(
             'Word Achievements',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: headingStyle,
           ),
           const SizedBox(height: 12),
           _AchievementsList(achievements: achievements),
-
           const SizedBox(height: 28),
-          Center(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: Color(0xFFe58923),
-                    width: 1,
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                onPressed: () async {
-                  await onResetPressed();
-               },
-                icon: const Icon(Icons.refresh_rounded, color: Color(0xFFFFAF28), size: 20),
-                label: const Text(
-                  'Reset Progress',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
+          PrimaryButton(
+            label: 'Reset Progress',
+            onPressed: () => onResetPressed(),
+            backgroundColor: Colors.redAccent,
+            borderColor: Colors.red,
+            disabledBorderColor: Colors.red.withOpacity(0.5),
+            textStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              decoration: TextDecoration.none,
             ),
           ),
-
           const SizedBox(height: 44),
         ],
       ),
@@ -496,15 +421,13 @@ class _JackpotProgressSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final double normalized = (progress.clamp(0, 100)) / 100.0;
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _glassDecoration,
+      padding: const EdgeInsets.all(24),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.casino, color: Color(0xFFFFAF28)),
-              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Jackpot Progress',
@@ -512,22 +435,32 @@ class _JackpotProgressSection extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.none,
                       ) ??
-                      const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                      const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.none,
+                      ),
                 ),
               ),
               Text(
                 '${progress.clamp(0, 100)}%',
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Color(0xFFFFAF28),
+                  fontSize: 18,
+                  decoration: TextDecoration.none,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: LinearProgressIndicator(
               value: normalized,
-              minHeight: 14,
+              minHeight: 10,
               backgroundColor: Colors.white12,
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFAF28)),
             ),
@@ -535,7 +468,11 @@ class _JackpotProgressSection extends StatelessWidget {
           const SizedBox(height: 12),
           const Text(
             'Fill the meter by winning spins. Reaching 100% drops bonus chips and boosts.',
-            style: TextStyle(color: Colors.white60, fontSize: 12),
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+              decoration: TextDecoration.none,
+            ),
           ),
         ],
       ),
@@ -562,46 +499,51 @@ class _BoostInventorySection extends StatelessWidget {
         .toList(growable: false);
 
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _glassDecoration,
+      padding: const EdgeInsets.all(24),
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
-              Icon(Icons.bolt_rounded, color: Colors.white70, size: 22),
-              const SizedBox(width: 8),
-              const Expanded(
+            children: const [
+              Icon(Icons.bolt_rounded, color: Color(0xFFFFAF28), size: 32),
+              SizedBox(width: 6),
+              Expanded(
                 child: Text(
-                  'Boost Inventory',
+                  'Manage charges to keep boosts ready when you need them.',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    color: Colors.white60,
+                    fontSize: 13,
+                    decoration: TextDecoration.none,
                   ),
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: onShopTap,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFAF28),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                icon: const Icon(Icons.storefront_rounded, size: 18),
-                label: const Text(
-                  'Open Shop',
-                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: boostTiles,
+          Column(
+            children: [
+              for (int i = 0; i < boostTiles.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(bottom: i == boostTiles.length - 1 ? 0 : 16),
+                  child: boostTiles[i],
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 200,
+              child: PrimaryButton(
+                label: 'Open shop'.toUpperCase(),
+                uppercase: false,
+                onPressed: onShopTap,
+                textStyle: const TextStyle(
+                  fontSize: 20,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -619,26 +561,34 @@ class _BoostInventoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color accent = info.accent;
     return Container(
-      width: MediaQuery.sizeOf(context).width / 2 - 28,
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1C),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withAlpha(77)),
+        gradient: LinearGradient(
+          colors: [const Color(0x331F1039), const Color(0x221F1039)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
+             Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: accent.withAlpha(34),
+                  gradient: LinearGradient(
+                    colors: [accent.withOpacity(0.28), accent.withOpacity(0.12)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-                child: Icon(info.icon, color: accent, size: 22),
+                child: Icon(info.icon, color: accent, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -646,8 +596,9 @@ class _BoostInventoryTile extends StatelessWidget {
                   info.label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontFamily: 'Cookies',
+                    decoration: TextDecoration.none,
                   ),
                 ),
               ),
@@ -656,7 +607,11 @@ class _BoostInventoryTile extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             info.description,
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 12,
+              decoration: TextDecoration.none,
+            ),
           ),
           const SizedBox(height: 14),
           Container(
@@ -669,8 +624,9 @@ class _BoostInventoryTile extends StatelessWidget {
               'Owned: $count',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontFamily: 'Cookies',
+                decoration: TextDecoration.none,
               ),
             ),
           ),
@@ -687,11 +643,17 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemWidth = (MediaQuery.sizeOf(context).width - 24 * 2 - 16) / 2;
     return Wrap(
       spacing: 16,
       runSpacing: 16,
       children: stats
-          .map((stat) => _StatCard(metric: stat))
+          .map(
+            (stat) => SizedBox(
+              width: itemWidth,
+              child: _StatCard(metric: stat),
+            ),
+          )
           .toList(growable: false),
     );
   }
@@ -705,9 +667,9 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.sizeOf(context).width / 2 - 28,
+      width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: _glassDecoration,
+      decoration: _cardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -715,8 +677,12 @@ class _StatCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: metric.accent.withAlpha(51),
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [metric.accent.withOpacity(0.28), metric.accent.withOpacity(0.12)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(metric.icon, color: metric.accent, size: 24),
           ),
@@ -725,14 +691,20 @@ class _StatCard extends StatelessWidget {
             metric.value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
+              fontSize: 24,
+              fontFamily: 'Cookies',
+              decoration: TextDecoration.none,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             metric.label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontFamily: 'Cookies',
+              decoration: TextDecoration.none,
+            ),
           ),
         ],
       ),
@@ -748,8 +720,8 @@ class _AchievementsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: _glassDecoration,
+      padding: const EdgeInsets.all(24),
+      decoration: _cardDecoration,
       child: Column(
         children: achievements
             .map(
@@ -795,12 +767,17 @@ class _AchievementTile extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
+                  decoration: TextDecoration.none,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 data.description,
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                  decoration: TextDecoration.none,
+                ),
               ),
             ],
           ),
@@ -810,49 +787,6 @@ class _AchievementTile extends StatelessWidget {
           color: data.unlocked ? data.accent : Colors.white24,
         ),
       ],
-    );
-  }
-}
-
-class _ProgressChip extends StatelessWidget {
-  const _ProgressChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(13),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white70, size: 18),
-          const SizedBox(width: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -887,8 +821,6 @@ class _StatMetric {
   final Color accent;
 }
 
-
-
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message});
 
@@ -906,7 +838,10 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Something went wrong:\n$message',
-              style: const TextStyle(color: Colors.white70),
+              style: const TextStyle(
+                color: Colors.white70,
+                decoration: TextDecoration.none,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -916,11 +851,11 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-const BoxDecoration _glassDecoration = BoxDecoration(
-  color: _StatsContent._cardColor,
+const BoxDecoration _cardDecoration = BoxDecoration(
+  color: Color(0xAA1F1039),
   borderRadius: BorderRadius.all(Radius.circular(24)),
-  border: Border.fromBorderSide(BorderSide(color: Colors.white12)),
+  border: Border.fromBorderSide(BorderSide(color: Color(0x33FFFFFF))),
   boxShadow: [
-    BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x66000000), blurRadius: 18, offset: Offset(0, 8)),
   ],
 );

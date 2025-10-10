@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +5,8 @@ import '../helpers/image_paths.dart';
 import '../helpers/link.dart';
 
 import '../widgets/header.dart';
+import '../widgets/stroke_text.dart';
+import '../widgets/primary_button.dart';
 
 import '../providers/player_progress_provider.dart';
 import '../providers/storage_providers.dart';
@@ -29,11 +29,6 @@ class SettingsScreen extends ConsumerWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(Images.background, fit: BoxFit.cover),
-
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(color: Colors.black.withAlpha(66)),
-        ),
 
         Scaffold(
           backgroundColor: Colors.transparent,
@@ -62,18 +57,28 @@ class SettingsScreen extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 56),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            const SizedBox(height: 46),
+                            const StrokeText(
+                              text: 'Settings',
+                              fontSize: 44,
+                              strokeColor: Color(0xFFD8D5EA),
+                              fillColor: Colors.white,
+                              shadowColor: Color(0xFF46557B),
+                              shadowBlurRadius: 4,
+                              shadowOffset: Offset(0, 3),
+                            ),
+                            const SizedBox(height: 40),
                             MenuButton(
                               text: 'Profile',
-                              onTap: () => Navigator.of(
+                              onPressed: () => Navigator.of(
                                 context,
                               ).pushNamed(ProfileScreen.routeName),
                             ),
                             const SizedBox(height: 20),
                             MenuButton(
                               text: 'Privacy Policy',
-                              onTap: () => Navigator.of(context).push(
+                              onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => WebScreen(
                                     title: 'Privacy Policy',
@@ -85,7 +90,7 @@ class SettingsScreen extends ConsumerWidget {
                             const SizedBox(height: 20),
                             MenuButton(
                               text: 'Terms & Conditions',
-                              onTap: () => Navigator.of(context).push(
+                              onPressed: () => Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => WebScreen(
                                     title: 'Terms & Conditions',
@@ -115,35 +120,16 @@ class SettingsScreen extends ConsumerWidget {
 
 class MenuButton extends StatelessWidget {
   final String text;
-  final VoidCallback onTap;
+  final VoidCallback onPressed;
 
-  const MenuButton({super.key, required this.text, required this.onTap});
+  const MenuButton({super.key, required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          border: const Border(
-            bottom: BorderSide(color: Color(0xFFe58923), width: 3),
-          ),
-          borderRadius: BorderRadius.circular(34),
-        ),
-        child: FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFffaf28),
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            textStyle: const TextStyle(fontFamily: 'Cookies', fontSize: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32),
-            ),
-          ),
-          onPressed: onTap,
-          child: Text(text),
-        ),
-      ),
+    return PrimaryButton(
+      label: text,
+      onPressed: onPressed,
+      uppercase: true,
     );
   }
 }

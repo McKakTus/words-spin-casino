@@ -28,23 +28,12 @@ class WheelDisplay extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final double size = MediaQuery.of(context).size.width;
+    final double size = MediaQuery.of(context).size.width + 180;
     final segmentCount = labels.length;
 
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: const [
-          BoxShadow(color: Color(0x4DFFD700), blurRadius: 30, spreadRadius: 10),
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -66,17 +55,13 @@ class WheelDisplay extends StatelessWidget {
             ),
           ),
 
-          // Pointer/Arrow at top
-          Positioned(
-            top: 0,
-            child: SizedBox(
-              width: 50,
-              height: 50,
+          // Outer ring
+          Positioned.fill(
+            child: Transform.scale(
+              scale: 1.35,
               child: Image.asset(
-                Images.arrow,
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
+                Images.wheelOuterRing,
+                fit: BoxFit.fill,
               ),
             ),
           ),
@@ -91,33 +76,7 @@ class WheelDisplay extends StatelessWidget {
                 width: size * 0.24,
                 height: size * 0.24,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const RadialGradient(
-                    colors: [
-                      Color(0xFF404040),
-                      Color(0xFF2A2A2A),
-                      Color(0xFF1A1A1A),
-                    ],
-                  ),
-                  border: Border.all(color: const Color(0xFFffaf28), width: 3),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'SPIN',
-                  style: TextStyle(
-                    color: const Color(0xFFffaf28),
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                  ),
-                ),
+                color: Colors.transparent, // полностью прозрачная, но кликабельная область
               ),
             ),
           ),

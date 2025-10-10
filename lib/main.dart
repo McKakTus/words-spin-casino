@@ -22,12 +22,12 @@ class WordsSpinCasinoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF00BFA5),
+      seedColor: const Color(0xAA1F1039),
       brightness: Brightness.dark,
     );
 
     return MaterialApp(
-      title: 'Words Spin Casino',
+      title: 'Casino Words Spin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Cookies',

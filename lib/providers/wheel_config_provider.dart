@@ -4,7 +4,7 @@ import '../models/wheel_segment.dart';
 
 final wheelConfigProvider = Provider<WheelConfig>((ref) {
   return WheelConfig(
-    spinCost: 25,
+    spinCost: 12,
     segments: [
       WheelSegmentConfig(
         id: WheelSegmentId.standard,
@@ -14,7 +14,7 @@ final wheelConfigProvider = Provider<WheelConfig>((ref) {
         penaltyMultiplier: 1.0,
         baseDifficulty: 'medium',
         modifiers: const [],
-        weight: 3,
+        weight: 1,
       ),
       WheelSegmentConfig(
         id: WheelSegmentId.highStakes,
@@ -34,7 +34,7 @@ final wheelConfigProvider = Provider<WheelConfig>((ref) {
         penaltyMultiplier: 1.0,
         baseDifficulty: 'easy',
         modifiers: const [WheelModifierType.timeLimit],
-        weight: 2,
+        weight: 1,
       ),
       WheelSegmentConfig(
         id: WheelSegmentId.mystery,
