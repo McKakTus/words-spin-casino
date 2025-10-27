@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../helpers/image_paths.dart';
+import '../helpers/size_config.dart';
 
 import '../widgets/header.dart';
 import '../widgets/wheel_display.dart';
@@ -200,7 +201,7 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
-                      const SizedBox(height: 44),
+                      SizedBox(height: he(44)),
                       const StrokeText(
                         text: 'SPIN THE WHEEL',
                         fontSize: 44,
@@ -210,13 +211,13 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                         shadowBlurRadius: 4,
                         shadowOffset: Offset(0, 3),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: he(12)),
                       const Text(
                         'Tap the wheel to discover your\n next word puzzle.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white70, fontSize: 18),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: he(12)),
                       Expanded(
                         child: Align(
                           alignment: Alignment.bottomCenter,
@@ -240,14 +241,14 @@ class _SpinScreenState extends ConsumerState<SpinScreen>
                                     ),
                                   ),
                                 )
-                              : const SizedBox(
-                                  width: 48,
-                                  height: 48,
+                              : SizedBox(
+                                  width: wi(48),
+                                  height: he(48),
                                   child: CircularProgressIndicator(),
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: he(20)),
                       if (!hasChips)
                         const Padding(
                           padding: EdgeInsets.only(top: 4),
@@ -671,22 +672,25 @@ class _WheelDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width + 180;
-    final wheelSize = screenWidth;
-    final visibleHeight = wheelSize * 0.85;
+    final size = MediaQuery.of(context).size;
+    final bool isTablet = size.shortestSide >= 600;
+
+    final double screenWidth = size.width + 180;
+    final double wheelSize = wi(screenWidth); 
+    final double scaledWheel = wheelSize * 0.85;
 
     return SizedBox(
       width: double.infinity,
-      height: visibleHeight,
+      height: scaledWheel * 0.85,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
           Positioned(
-            top: 140,
+            top: isTablet ? 140 : 110,
             child: SizedBox(
-              width: wheelSize,
-              height: wheelSize,
+              width: scaledWheel,
+              height: scaledWheel,
               child: child,
             ),
           ),

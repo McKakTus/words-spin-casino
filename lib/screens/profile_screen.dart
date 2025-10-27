@@ -135,6 +135,14 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                           key: _formKey,
                           child: Column(
                             children: [
+                              const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: BackButton(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
                               const StrokeText(
                                 text: 'PROFILE',
                                 fontSize: 48,
@@ -251,23 +259,6 @@ class _ProfileScreenState extends ConsumerState<_ProfileScreenBody> {
                                     ),
                                     const SizedBox(height: 20),
                                     PrimaryButton(
-                                      label: 'Log out',
-                                      onPressed: _isSaving
-                                          ? null
-                                          : () {
-                                              _confirmLogout(context, ref);
-                                            },
-                                      enabled: !_isSaving,
-                                      backgroundColor: const Color(0xFFFFAF28),
-                                      borderColor: const Color(0xFFE58923),
-                                      textStyle: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 22,
-                                        decoration: TextDecoration.none,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    PrimaryButton(
                                       label: 'Delete profile',
                                       onPressed: _isSaving
                                           ? null
@@ -371,58 +362,6 @@ Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
   }
 
   await deleteProfile(prefs, profile.id);
-  ref.invalidate(sharedPreferencesProvider);
-  ref.invalidate(activeProfileProvider);
-  ref.invalidate(playerProgressProvider);
-
-  final remaining = readAllProfiles(prefs);
-  if (!context.mounted) return;
-
-  final nextRoute =
-      remaining.isEmpty ? CreateAccountScreen.routeName : LoginScreen.routeName;
-  Navigator.of(context)
-      .pushNamedAndRemoveUntil(nextRoute, (route) => false);
-}
-
-Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-  final confirmed =
-      await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF141414),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            'Log out?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-          ),
-          content: const Text(
-            'You will return to the onboarding screen and can sign in again later.',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFFAF28),
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Log Out'),
-            ),
-          ],
-        ),
-      ) ??
-      false;
-
-  if (!confirmed) return;
-
-  final prefs = await ref.read(sharedPreferencesProvider.future);
-  await clearActiveProfile(prefs);
   ref.invalidate(sharedPreferencesProvider);
   ref.invalidate(activeProfileProvider);
   ref.invalidate(playerProgressProvider);

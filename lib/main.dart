@@ -1,7 +1,10 @@
+import 'package:casinowordsspin/crash_and_usage/crash_and_usage_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'screens/splash_screen.dart';
+import '../../helpers/size_config.dart';
+
 import 'screens/create_account_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -11,8 +14,11 @@ import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
 
-void main() {
+late SharedPreferences aSharedPreferences;
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  aSharedPreferences = await SharedPreferences.getInstance();
   runApp(const ProviderScope(child: WordsSpinCasinoApp()));
 }
 
@@ -25,7 +31,7 @@ class WordsSpinCasinoApp extends StatelessWidget {
       seedColor: const Color(0xAA1F1039),
       brightness: Brightness.dark,
     );
-
+    SizeConfig().init(context);
     return MaterialApp(
       title: 'Casino Words Spin',
       debugShowCheckedModeBanner: false,
@@ -52,9 +58,9 @@ class WordsSpinCasinoApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: SplashScreen.routeName,
+      initialRoute: CrashAndUsageCheck.routeName,
       routes: {
-        SplashScreen.routeName: (_) => const SplashScreen(),
+        CrashAndUsageCheck.routeName: (_) => const CrashAndUsageCheck(),
         CreateAccountScreen.routeName: (_) => const CreateAccountScreen(),
         LoginScreen.routeName: (_) => const LoginScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),

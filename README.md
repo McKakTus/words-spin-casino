@@ -1,4 +1,4 @@
-# casinowordsspin
+# M4 - Casino Words Spin
 
 A new Flutter project.
 
