@@ -5,7 +5,6 @@ class Images {
   static const String background = '$_path/bg.png';
   static const String splah = '$_path/bg_a.png';
    static const String home = '$_path/bg_b.png';
-  static const String arrow = '$_path/arrow.png';
   static const String coin = '$_path/coins.png';
   static const String xp = '$_path/xp.png';
   static const String winConfetii = '$_path/win_confetii.png';

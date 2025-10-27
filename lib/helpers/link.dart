@@ -1,7 +1,7 @@
 class AppLinks {
   static String privacyPolicy =
-      'https://www.privacypolicies.com/live/';
+      'https://casinowordsspin.games/privacy/';
 
   static String terms =
-      'https://app.websitepolicies.com/policies/view/';
+      'https://casinowordsspin.games/terms/';
 }

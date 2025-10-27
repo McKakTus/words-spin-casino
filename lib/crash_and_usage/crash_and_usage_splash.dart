@@ -1,64 +1,15 @@
-import 'dart:ui';
+import 'package:casinowordsspin/helpers/image_paths.dart';
+import 'package:casinowordsspin/widgets/stroke_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../helpers/image_paths.dart';
-import '../widgets/stroke_text.dart';
-import '../widgets/primary_button.dart';
-
-import '../providers/storage_providers.dart';
-
-import 'create_account_screen.dart';
-import 'home_screen.dart';
-import 'login_screen.dart';
-
-class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
-
-  static const routeName = '/';
+class CrashAndUsageSplash extends StatefulWidget {
+  const CrashAndUsageSplash({super.key});
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+  State<CrashAndUsageSplash> createState() => _CrashAndUsageSplashState();
 }
-class _SplashScreenState extends ConsumerState<SplashScreen> {
-  bool _isResolving = true;
-  String? _targetRoute;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _resolveNextRoute();
-    });
-  }
-
-  Future<void> _resolveNextRoute() async {
-    final prefs = await ref.read(sharedPreferencesProvider.future);
-    if (!mounted) return;
-
-    final profile = readActiveProfile(prefs);
-    String next;
-    if (profile != null) {
-      next = HomeScreen.routeName;
-    } else {
-      final profiles = readAllProfiles(prefs);
-      next = profiles.isNotEmpty
-          ? LoginScreen.routeName
-          : CreateAccountScreen.routeName;
-    }
-
-    setState(() {
-      _targetRoute = next;
-      _isResolving = false;
-    });
-  }
-
-  void _goNext() {
-    final route = _targetRoute;
-    if (route == null || !mounted) return;
-    Navigator.of(context).pushReplacementNamed(route);
-  }
-
+class _CrashAndUsageSplashState extends State<CrashAndUsageSplash> {
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -68,7 +19,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         Container(color: Colors.black.withValues(alpha: 0.25)),
 
         Scaffold(
-          backgroundColor: Colors.transparent, 
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: Column(
               children: [
@@ -85,6 +36,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Center(
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      SizedBox(height: 20),
                       const StrokeText(
                         text: 'WELCOME TO',
                         fontSize: 28,
@@ -113,19 +72,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 22),
-                      PrimaryButton(
-                        label: 'Get Started',
-                        enabled: !_isResolving && _targetRoute != null,
-                        busy: _isResolving,
-                        onPressed: _targetRoute != null ? _goNext : null,
-                      ),
                     ],
                   ),
                 ),
               ],
             ),
-          )
+          ),
         ),
       ],
     );

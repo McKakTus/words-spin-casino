@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../helpers/image_paths.dart';
 import '../helpers/xp_utils.dart';
+import '../helpers/size_config.dart';
 import '../widgets/stroke_text.dart';
 import '../models/player_progress.dart';
 
